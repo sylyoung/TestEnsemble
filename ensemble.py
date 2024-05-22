@@ -148,13 +148,9 @@ def SML_onevsrest_online_vs_offline(preds_all, labels, class_num, args, interval
 
         # uncomment the following print lines for exact comparison
         if predict_offline[sample_num-1] == predict_online:
-            #print(sample_num, 'True', predict_offline[sample_num-1], predict_online)
             cnt += 1
         else:
             cnt = cnt
-            #print(sample_num, 'False', predict_offline[sample_num-1], predict_online)
-    #print(preds_all.shape)
-    #print('online compare to offline same prediction number', cnt)
 
     offline_score = np.round(balanced_accuracy_score(labels, predict_offline), 5)
 
@@ -253,8 +249,8 @@ if __name__ == '__main__':
     print('#' * 30)
     print('Voting, SML-OVR offline, SML-OVR online, True-BCA-Weights Ensemble')
     print(scores)
-
-    sys.exit(0)  # comment out this line for ranking and pruning experiment
+    
+    input('Main results done.\nPress any key for ranking and pruning experiment.')
 
     # continuous removal of worst classifier
     minimum_ind = None
