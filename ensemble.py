@@ -249,7 +249,7 @@ if __name__ == '__main__':
     print('#' * 30)
     print('Voting, SML-OVR offline, SML-OVR online, True-BCA-Weights Ensemble')
     print(scores)
-    
+
     input('Main results done.\nPress any key for ranking and pruning experiment.')
 
     # continuous removal of worst classifier
