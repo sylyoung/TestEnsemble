@@ -1,5 +1,8 @@
-
-
+# -*- coding: utf-8 -*-
+# @Time    : 2024/3/1
+# @Author  : Siyang Li
+# @File    : generate_classification.py
+# generate classification results using LLMs on text datasets
 import sys, os, argparse, random
 import torch
 import numpy as np

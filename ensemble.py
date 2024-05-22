@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# @Time    : 2024/3/17
+# @Author  : Siyang Li
+# @File    : ensemble.py
+# offline and online test-time ensemble using multiple classifiers
 import time, sys, argparse, random, os
 import numpy as np
 import torch

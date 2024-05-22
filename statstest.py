@@ -1,4 +1,8 @@
-# Example of the Wilcoxon Signed-Rank Test
+# -*- coding: utf-8 -*-
+# @Time    : 2024/3/30
+# @Author  : Siyang Li
+# @File    : statstest.py
+# produce statistical testing results
 import numpy as np
 from scipy import stats
 from scipy.stats import wilcoxon
@@ -18,7 +22,7 @@ for data_name in names:
         data2 += 1
         print(path)
 
-        stat, p = wilcoxon(data1, data2)
+        stat, p = wilcoxon(data1, data2)  # Wilcoxon
         #stat, p = ttest_rel(data1, data2)  # t-test
         stats.false_discovery_control(p)
 
