@@ -35,6 +35,41 @@ def write_to_file_online(data, data_offline, label, path):
     f.close()
 
 
+def SML(preds, labels, args, write=True):
+    # SML for binary classification, as in "Ranking and combining multiple predictors without labeled data"
+    '''
+    :param preds: numpy array (M, n) of predictions of M classifiers on n test samples, assumes all values to be in {0, 1}
+    :param labels: numpy array (n, ) of true labels, assumes all values to be in {0, 1}
+    :param args: arguments, see main func
+    :param write: boolean, whether write to file to record the class prediction
+    :return: bca score, weights of SML
+    '''
+    pred = np.ones((preds.shape[0], preds.shape[1])) * -1
+    for j in range(len(preds)):
+        for n in range(len(preds[1])):
+            if preds[j, n] == 1:
+                pred[j, n] = 1
+            else:
+                pred[j, n] = -1
+
+    Q = pred @ pred.T  # pred is shape (M, n)
+    print('Q', Q.shape, Q)
+    v = np.linalg.eig(Q)[1][:, 0]  # principal eigenvector
+    print('v', v.shape, v)
+
+    predictions = np.einsum('a,ab->b', v, pred)
+    predict = np.where(predictions >= 0, 1, 0)
+    score = np.round(balanced_accuracy_score(labels, predict), 5)
+    print('ensemble weights:')
+    weights = v / np.sum(v)  # normalize ensemble weights
+    print(weights)
+    print('SML: {:.2f}'.format(score * 100))
+    if write:
+        write_to_file(path='./results/' + args.dataset_name + '/sml.csv', data=predict)
+    return score * 100, weights
+
+
+
 def SML_onevsrest_hard(preds, labels, n_classes, args, write=True):
     # SML-OVR, as proposed in our paper "Black-Box Test-Time Ensemble"
     '''
