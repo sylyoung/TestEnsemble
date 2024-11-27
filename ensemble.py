@@ -52,10 +52,13 @@ def SML(preds, labels, args, write=True):
             else:
                 pred[j, n] = -1
 
-    Q = pred @ pred.T  # pred is shape (M, n)
-    print('Q', Q.shape, Q)
+    mu = np.mean(pred, axis=1)
+    deviations = pred - mu[:, np.newaxis]
+    Q = np.dot(deviations, deviations.T) / (pred.shape[1] - 1)
     v = np.linalg.eig(Q)[1][:, 0]  # principal eigenvector
-    print('v', v.shape, v)
+    # make positive
+    if v[0] < 0:
+        v = -v
 
     predictions = np.einsum('a,ab->b', v, pred)
     predict = np.where(predictions >= 0, 1, 0)
@@ -97,13 +100,15 @@ def SML_onevsrest_hard(preds, labels, n_classes, args, write=True):
     # loop over all classes in all ovr splits
     for i in range(class_num):
 
-        # {0, 1}
+        # {0, 1}, no difference from {-1, 1}
         pred = np.zeros_like(preds)
         for j in range(len(preds)):
             pred[j, np.arange(len(preds[j])), preds[j].argmax(1)] = 1
         pred = pred[:, :, i]
 
-        Q = pred @ pred.T  # pred is shape (M, n)
+        mu = np.mean(pred, axis=1)
+        deviations = pred - mu[:, np.newaxis]
+        Q = np.dot(deviations, deviations.T) / (pred.shape[1] - 1)
         v = np.linalg.eig(Q)[1][:, 0]  # principal eigenvector
         weights = v / np.sum(v)  # normalize
         weights_all.append(weights)  # ensemble weights
