@@ -11,6 +11,7 @@ from transformers.image_utils import load_image
 from transformers import AutoModelForCausalLM, AutoProcessor, GenerationConfig
 from PIL import Image
 from transformers import BlipProcessor, BlipForQuestionAnswering
+from pathlib import Path
 
 
 def seed_everything(args):
@@ -33,6 +34,8 @@ if __name__ == '__main__':
     ############################################################configs#################################################
     parser = argparse.ArgumentParser(description='VLM experiment')
     parser.add_argument('--seed', type=int, default=0, help='seed for everything')
+    parser.add_argument('--root_dir', type=str, default="/mnt/data2/sylyoung/LLM/", help='model path root dir')
+    parser.add_argument('--data_dir', type=str, default="/mnt/data2/sylyoung/Image/", help='model path root dir')
     parser.add_argument('--dataset', type=str, default='AgeDB', help='dataset name')
     parser.add_argument('--gpu_id', type=int, default=-1, help='gpuid')
     parser.add_argument('--model_id', type=int, default=0, help='model id')
@@ -42,17 +45,17 @@ if __name__ == '__main__':
 
     print(args)
 
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0,1,2,3,4,5,6,7'
+    print(f"Available CUDA devices: {torch.cuda.device_count()}")
+    print('torch.cuda.is_available()', torch.cuda.is_available())
     try:
-        device_id = str(args.gpu_id)
-        print('device id', device_id)
-        os.environ["CUDA_VISIBLE_DEVICES"] = device_id
-        args.data_env = 'gpu'
+        if torch.cuda.device_count() == 1:
+            device = torch.device("cuda:" + str(0) if torch.cuda.is_available() else "cpu")
+        else:
+            device = torch.device("cuda:" + str(args.gpu_id) if torch.cuda.is_available() else "cpu")
     except:
-        args.data_env = 'local'
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    print('Using',  device)
+        device = 'local'
+    print('device:', device)
 
     ############################################################model configs###########################################
     print('dataset', args.dataset)
@@ -92,7 +95,7 @@ if __name__ == '__main__':
     # "MiniCPM-Llama3-V-2_5"  # bad
     #  "deplot"
 
-    model_path = "/mnt/data2/sylyoung/LLM/" + model_name
+    model_path = args.root_dir + model_name
 
     batch_size = args.batch_size
 
@@ -101,6 +104,40 @@ if __name__ == '__main__':
     # prompt
     if args.dataset == 'AgeDB':
         prompt = "What is the age of the person in the image?\nAnswer in a single integer:"
+    elif args.dataset == 'CFD-age':
+        prompt = "Estimate the approximate age of this person (in years)?\nAnswer in a single integer:"
+    elif args.dataset == 'CFD-afraid':
+        prompt = "On a scale of 1 to 7, how fearful/afraid does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-angry':
+        prompt = "On a scale of 1 to 7, how angry does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-attractive':
+        prompt = "On a scale of 1 to 7, how attractive does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-babyfaced':
+        prompt = "On a scale of 1 to 7, how baby-faced does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-disgusted':
+        prompt = "On a scale of 1 to 7, how disgusted does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    # elif args.dataset == 'CFD-dominant':
+    #     prompt = "On a scale of 1 to 7, how dominant does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-feminine':
+        prompt = "On a scale of 1 to 7, how feminine does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-happy':
+        prompt = "On a scale of 1 to 7, how happy does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-masculine':
+        prompt = "On a scale of 1 to 7, how masculine does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-sad':
+        prompt = "On a scale of 1 to 7, how sad does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-surprised':
+        prompt = "On a scale of 1 to 7, how surprised does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-threatening':
+        prompt = "On a scale of 1 to 7, how threatening does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-trustworthy':
+        prompt = "On a scale of 1 to 7, how trustworthy does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    elif args.dataset == 'CFD-unusual':
+        prompt = "On a scale of 1 to 7, how unusual does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    # elif args.dataset == 'CFD-warm':
+    #     prompt = "On a scale of 1 to 7, how warm does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
+    # elif args.dataset == 'CFD-competent':
+    #     prompt = "On a scale of 1 to 7, how competent does the person pictured above appear? (1 = Not at all, 4 = Neutral, 7 = Extremely)\nAnswer in a single float:"
     else:
         sys.exit(0)
 
@@ -110,20 +147,20 @@ if __name__ == '__main__':
 
     if model_name == 'Qwen-VL-Chat':
         processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
-        model = AutoModelForCausalLM.from_pretrained(model_path, device_map="cuda", trust_remote_code=True).eval()
+        model = AutoModelForCausalLM.from_pretrained(model_path, device_map=device, trust_remote_code=True).eval()
     elif model_name == 'deepseek-vl-7b-chat':
         from deepseek_vl.models import VLChatProcessor, MultiModalityCausalLM
         from deepseek_vl.utils.io import load_pil_images
         vl_chat_processor: VLChatProcessor = VLChatProcessor.from_pretrained(model_path)
         tokenizer = vl_chat_processor.tokenizer
 
-        vl_gpt: MultiModalityCausalLM = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True)
-        vl_gpt = vl_gpt.to(torch.bfloat16).cuda().eval()
+        vl_gpt: MultiModalityCausalLM = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=device)
+        vl_gpt = vl_gpt.to(torch.bfloat16).eval()
     elif model_name == "POINTS-1-5-Qwen-2-5-7B-Chat":
         model = AutoModelForCausalLM.from_pretrained(model_path,
                                                      trust_remote_code=True,
                                                      torch_dtype=torch.float16,
-                                                     device_map='cuda')
+                                                     device_map=device)
         tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
         from wepoints.utils.images import Qwen2ImageProcessorForPOINTSV15
         image_processor = Qwen2ImageProcessorForPOINTSV15.from_pretrained(model_path)
@@ -131,9 +168,9 @@ if __name__ == '__main__':
         processor = BlipProcessor.from_pretrained(model_path,
                                                   trust_remote_code=True,
                                                   torch_dtype=torch.bfloat16,
-                                                  device_map='cuda'
+                                                  device_map=device
                                                   )
-        model = BlipForQuestionAnswering.from_pretrained(model_path).to("cuda")
+        model = BlipForQuestionAnswering.from_pretrained(model_path).to(device)
     elif model_name == "Mantis-8B-Idefics2":
         from transformers import AutoProcessor, AutoModelForVision2Seq
         processor = AutoProcessor.from_pretrained(
@@ -154,12 +191,14 @@ if __name__ == '__main__':
             model_path,
             torch_dtype=torch.bfloat16,
             low_cpu_mem_usage=True,
-            trust_remote_code=True).eval().cuda()
+            trust_remote_code=True,
+            device_map=device).eval()
     elif model_name == 'SAIL-VL-2B':
         model = AutoModel.from_pretrained(
             model_path,
             torch_dtype=torch.bfloat16,
-            trust_remote_code=True).eval().cuda()
+            trust_remote_code=True,
+            device_map=device).eval()
         tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
 
         import torchvision.transforms as T
@@ -255,21 +294,21 @@ if __name__ == '__main__':
             low_cpu_mem_usage=True,
             # use_flash_attn=True,
             trust_remote_code=True,
-            device_map="cuda").eval()
+            device_map=device).eval()
     elif model_name == "llava-onevision-qwen2-7b-si-hf":
         from transformers import AutoProcessor, LlavaOnevisionForConditionalGeneration
         model = LlavaOnevisionForConditionalGeneration.from_pretrained(
             model_path,
             torch_dtype=torch.float16,
             low_cpu_mem_usage=True,
-            device_map="cuda"
+            device_map=device
         )
         processor = AutoProcessor.from_pretrained(model_path)
     elif model_name == 'deplot':
         from transformers import Pix2StructProcessor, Pix2StructForConditionalGeneration
         processor = Pix2StructProcessor.from_pretrained(model_path,
                                                         torch_dtype=torch.bfloat16,
-                                                        device_map="cuda"
+                                                        device_map=device
                                                         )
         model = Pix2StructForConditionalGeneration.from_pretrained(model_path)
     elif model_name == 'Bunny-Llama-3-8B-V':
@@ -304,13 +343,13 @@ if __name__ == '__main__':
             padding_side='left',
             torch_dtype=torch.float16,
             low_cpu_mem_usage=True,
-            device_map="cuda"
+            device_map=device
         )
     elif model_name == 'Ovis1.5-Llama3-8B':
         model = AutoModelForCausalLM.from_pretrained(model_path,
                                                      torch_dtype=torch.bfloat16,
                                                      # multimodal_max_length=8192,
-                                                     trust_remote_code=True).cuda()
+                                                     trust_remote_code=True).to(device)
         text_tokenizer = model.get_text_tokenizer()
         visual_tokenizer = model.get_visual_tokenizer()
         conversation_formatter = model.get_conversation_formatter()
@@ -319,21 +358,21 @@ if __name__ == '__main__':
     elif model_name == 'MiniCPM-V':
         model = AutoModel.from_pretrained(model_path, trust_remote_code=True, torch_dtype=torch.bfloat16)
         # For Nvidia GPUs support BF16 (like A100, H100, RTX3090)
-        model = model.to(device='cuda', dtype=torch.bfloat16)
+        model = model.to(device=device, dtype=torch.bfloat16)
         tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
         model.eval()
     elif model_name == "MiniCPM-Llama3-V-2_5":
         model = AutoModel.from_pretrained(model_path, trust_remote_code=True,
                                           torch_dtype=torch.float16)
-        model = model.to(device='cuda')
+        model = model.to(device=device)
         tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
         model.eval()
     elif model_name == 'Molmo-7B-O-0924':
         processor = AutoProcessor.from_pretrained(model_path, torch_dtype=torch.bfloat16, device_map='auto', trust_remote_code=True)
-        model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", trust_remote_code=True,
+        model = AutoModelForCausalLM.from_pretrained(model_path, device_map=device, trust_remote_code=True,
                                                      torch_dtype=torch.bfloat16).eval()
     elif model_name == "Monkey-Chat":
-        model = AutoModelForCausalLM.from_pretrained(model_path, device_map='cuda', trust_remote_code=True).eval()
+        model = AutoModelForCausalLM.from_pretrained(model_path, device_map=device, trust_remote_code=True).eval()
         tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
         tokenizer.padding_side = 'left'
         tokenizer.pad_token_id = tokenizer.eod_id
@@ -342,7 +381,7 @@ if __name__ == '__main__':
     elif model_name == "Phi-3.5-vision-instruct":
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
-            device_map="cuda",
+            device_map=device,
             trust_remote_code=True,
             torch_dtype="auto",
             _attn_implementation='eager'
@@ -359,7 +398,7 @@ if __name__ == '__main__':
     #
     #     pretrained = "BAAI/Aquila-VL-2B-llava-qwen"
     #     model_name = "llava_qwen"
-    #     device = "cuda"
+    #     device = device
     #     device_map = "auto"
     #     tokenizer, model, image_processor, max_length = load_pretrained_model(model_path, None, model_name,
     #                                                                           device_map=device_map)  # Add any other thing you want to pass in llava_model_args
@@ -378,7 +417,8 @@ if __name__ == '__main__':
         model = AutoModelForVision2Seq.from_pretrained(
             model_path,
             torch_dtype=torch.bfloat16,
-        ).to("cuda")
+            device_map=device
+        )
 
         # Create input messages
         messages = [
@@ -392,7 +432,7 @@ if __name__ == '__main__':
         ]
     elif model_name == "paligemma-3b-mix-448":
         from transformers import AutoProcessor, PaliGemmaForConditionalGeneration
-        model = PaliGemmaForConditionalGeneration.from_pretrained(model_path).eval()
+        model = PaliGemmaForConditionalGeneration.from_pretrained(model_path).eval().to(device)
         processor = AutoProcessor.from_pretrained(model_path)
     else:
         processor = AutoProcessor.from_pretrained(model_path, torch_dtype=torch.bfloat16, device_map='auto', trust_remote_code=True)
@@ -401,23 +441,59 @@ if __name__ == '__main__':
 
 
     # image data
-    image_path_dir = "/mnt/data2/sylyoung/Image/AgeDB/"
+    if args.dataset == 'AgeDB':
+        image_path_dir = args.data_dir + "AgeDB/"
+    elif 'CFD' in args.dataset:
+        image_path_dir = args.data_dir + "CFD/Images"
+    else:
+        sys.exit(0)
 
     print(image_path_dir)
 
     first_question = True
 
-    files = os.listdir(image_path_dir)
-    # Filter and sort the files based on the numerical ID
-    sorted_files = sorted(
-        files,
-        key=lambda x: int(x.split('_')[0])  # Extract and convert the ID to an integer
-    )
+    if args.dataset == 'AgeDB':
+        files = os.listdir(image_path_dir)
+        # Filter and sort the files based on the numerical ID
+        sorted_files = sorted(
+            files,
+            key=lambda x: int(x.split('_')[0])  # Extract and convert the ID to an integer
+        )
+    elif 'CFD' in args.dataset:
+        def process_jpg_images(root_dir):
+            """
+            Process all JPG images in root_dir and its subdirectories in fixed lexicographical order.
+
+            Args:
+                root_dir (str): Path to the root directory containing images
+            """
+            jpg_files = []
+
+            # Recursively walk through the directory tree
+            for dirpath, _, filenames in os.walk(root_dir):
+                for filename in filenames:
+                    # Check for .jpg or .jpeg extensions (case-insensitive)
+                    lower_filename = filename.lower()
+                    if lower_filename.endswith(('.jpg', '.jpeg')):
+                        full_path = os.path.join(dirpath, filename)
+                        jpg_files.append(full_path)
+
+            # Sort paths lexicographically for fixed order
+            jpg_files.sort()
+            return jpg_files
+
+        sorted_files = process_jpg_images(image_path_dir)
+    else:
+        sys.exit(0)
+
 
     ##########################################################model configs & query#####################################
     cnt = 0
     for file in sorted_files:
-        image_path = image_path_dir + file
+        if args.dataset == 'AgeDB':
+            image_path = image_path_dir + file
+        else:
+            image_path = file
         if not image_path.endswith(".jpg"):
             continue
         print(image_path)
@@ -486,7 +562,6 @@ if __name__ == '__main__':
         elif model_name == "llava-onevision-qwen2-7b-si-hf":
             conversation = [
                 {
-
                     "role": "user",
                     "content": [
                         {"type": "text", "text": prompt},
@@ -495,7 +570,7 @@ if __name__ == '__main__':
                 },
             ]
             prompt_ = processor.apply_chat_template(conversation, add_generation_prompt=True)
-            inputs = processor(images=image, text=prompt_, return_tensors='pt').to(0, torch.float16)
+            inputs = processor(images=image, text=prompt_, return_tensors='pt').to(0, torch.float16).to(device)
             output = model.generate(**inputs, max_new_tokens=200, do_sample=False)
             generated_text = processor.decode(output[0][2:], skip_special_tokens=True)
             print(generated_text)
@@ -560,10 +635,17 @@ if __name__ == '__main__':
             print(generated_text)
         elif model_name == 'SAIL-VL-2B':
             # set the max number of tiles in `max_num`
-            pixel_values = load_image(image_path, max_num=10).to(torch.bfloat16).cuda()
+            pixel_values = load_image(image_path, max_num=10).to(torch.bfloat16).to(device)
             generation_config = dict(max_new_tokens=1024, do_sample=True)
             question = '<image>         ' + prompt
-            generated_text = model.chat(tokenizer, pixel_values, question, generation_config)
+
+            # Get device from language model
+            lang_model_device = next(model.language_model.parameters()).device
+
+            # Set CUDA device context for tokenizer
+            with torch.cuda.device(lang_model_device):
+                generated_text = model.chat(tokenizer, pixel_values, question, generation_config)
+
             print(generated_text)
         elif model_name == 'Valley-Eagle-7B':
 
@@ -619,8 +701,8 @@ if __name__ == '__main__':
             image_tensor = process_images([image], image_processor, model.config)[0]
             input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt')
 
-            input_ids = input_ids.to(device='cuda', non_blocking=True)
-            image_tensor = image_tensor.to(dtype=torch.float16, device='cuda', non_blocking=True)
+            input_ids = input_ids.to(device=device, non_blocking=True)
+            image_tensor = image_tensor.to(dtype=torch.float16, device=device, non_blocking=True)
 
             with torch.inference_mode():
                 output_ids = model.generate(
@@ -645,13 +727,15 @@ if __name__ == '__main__':
         elif model_name == 'h2ovl-mississippi-2b':
             tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, use_fast=False)
             generation_config = dict(max_new_tokens=1024, do_sample=True)
-            image_file = './examples/image1.jpg'
             question = '<image>\n' + prompt
-            generated_text, history = model.chat(tokenizer, image_path, question, generation_config, history=None,
-                                           return_history=True)
+
+            # Set CUDA device context for tokenizer
+            with torch.cuda.device(device):
+                generated_text, history = model.chat(tokenizer, image_path, question, generation_config, history=None,
+                                               return_history=True)
             print(generated_text)
         elif model_name == "blip-vqa-base":
-            inputs = processor(image, prompt, return_tensors="pt").to("cuda")
+            inputs = processor(image, prompt, return_tensors="pt").to(device)
 
             out = model.generate(**inputs)
             generated_text = processor.decode(out[0], skip_special_tokens=True)
@@ -765,7 +849,7 @@ if __name__ == '__main__':
                 pixel_values = torch.stack(pixel_values)
                 return pixel_values
 
-            pixel_values = load_image_internVL(image_path, max_num=12).to(torch.bfloat16).cuda()
+            pixel_values = load_image_internVL(image_path, max_num=12).to(torch.bfloat16).to(device)
             generation_config = dict(max_new_tokens=1024, do_sample=True)
             generated_text = model.chat(tokenizer, pixel_values, question, generation_config)
             print(generated_text)
@@ -810,7 +894,7 @@ if __name__ == '__main__':
                 text=prompt
             )
             inputs = {k: v.to(model.device).unsqueeze(0) for k, v in inputs.items()}
-            with torch.autocast(device_type="cuda", enabled=True, dtype=torch.bfloat16):
+            with torch.autocast(device_type='cuda', enabled=True, dtype=torch.bfloat16):
                 output = model.generate_from_batch(
                     inputs,
                     GenerationConfig(max_new_tokens=200, stop_strings="<|endoftext|>"),
@@ -827,8 +911,8 @@ if __name__ == '__main__':
             input_ids = input_ids.input_ids
 
             pred = model.generate(
-                input_ids=input_ids.cuda(),
-                attention_mask=attention_mask.cuda(),
+                input_ids=input_ids.to(device),
+                attention_mask=attention_mask.to(device),
                 do_sample=False,
                 num_beams=1,
                 max_new_tokens=512,
@@ -849,7 +933,7 @@ if __name__ == '__main__':
 
             prompt_ = processor.apply_chat_template(messages, add_generation_prompt=True)
             inputs = processor(text=prompt_, images=[image1], return_tensors="pt")
-            inputs = inputs.to("cuda")
+            inputs = inputs.to(device)
 
             # Generate outputs
             generated_ids = model.generate(**inputs, max_new_tokens=500)
@@ -880,7 +964,7 @@ if __name__ == '__main__':
                 print(generated_text)
         elif model_name == "paligemma-3b-mix-448":
             # Instruct the model to create a caption in Spanish
-            model_inputs = processor(text=prompt, images=image, return_tensors="pt")
+            model_inputs = processor(text=prompt, images=image, return_tensors="pt").to(device)
             input_len = model_inputs["input_ids"].shape[-1]
 
             with torch.inference_mode():
@@ -979,7 +1063,12 @@ if __name__ == '__main__':
             generated_text = str(generated_text)
             print(generated_text)
 
+        if not os.path.isdir('./results/' + args.dataset + '/'):
+            path = Path('./results/' + args.dataset + '/')
+            path.mkdir(parents=True)
+
         with open('./results/' + args.dataset + '/' + model_name + '.log', 'a') as f:
-            f.write(generated_text)
+            f.write(image_path + '\n')
+            f.write(generated_text + '\n')
+            f.write('#' * 50 + '\n')
         cnt += 1
-        f.write('#' * 100 + '\n')
