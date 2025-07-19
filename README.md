@@ -12,6 +12,8 @@ The core advantages of SML-OVR:
 
 Currently, the implementation for text classification with large language models (LLMs) are provided. We provided the already generated results from the LLMs.
 
+Run the following line to verify results on over 10 combination methods:
+
 ```sh 
 python ensemble.py
 ```  
