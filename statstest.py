@@ -13,9 +13,9 @@ names = ['MOSI', 'TUSAS', 'TweetEval', 'WOS']
 for data_name in names:
     print('#' * 30)
 
-    data1 = np.loadtxt('./results/' + data_name + '/smlmulti-hard.csv')
+    data1 = np.loadtxt('./results/' + data_name + '/smlovr.csv')
     data1 += 1
-    paths = ['./results/' + data_name + '/voting.csv']
+    paths = ['./results/' + data_name + '/laa.csv']
 
     for path in paths:
         data2 = np.loadtxt(path)

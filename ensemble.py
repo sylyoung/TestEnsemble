@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2024/4/1
+# @Time    : 2025/7/18
 # @Author  : Siyang Li
 # @File    : ensemble.py
-# offline and online test-time ensemble using multiple classifiers
+# black-box test-time ensemble using multiple base classifiers' predictions
 import time, sys, argparse, random, os
 import numpy as np
 import torch
@@ -16,7 +16,6 @@ from algs.ZC import ZC
 from algs.LA_twopass import one_pass, two_pass
 from algs.LAA import LAA_net
 from algs.EBCC import ebcc_vb
-from algs.isml import estimate_multiclass
 import warnings
 warnings.simplefilter("ignore", UserWarning)
 
@@ -27,6 +26,7 @@ def write_to_file(data, path):
     f = open(path, 'w')
     np.savetxt(f, data.astype(int))
     f.close()
+
 
 def write_to_file_online(data, data_offline, label, path):
     data = np.array(data).reshape(-1,)
@@ -83,7 +83,7 @@ def SML(preds, labels, args, write=True):
     return score * 100, acc_score * 100, v, predict
 
 
-def SML_onevsrest_hard(preds, labels, n_classes, args, write=True, return_weights_all=False):
+def SML_OVR(preds, labels, n_classes, args, write=True, return_weights_all=False):
     # SML-onevsrest, as illustrated in our paper "Black-Box Test-Time Ensemble"
     start_time = time.perf_counter()
 
@@ -134,13 +134,13 @@ def SML_onevsrest_hard(preds, labels, n_classes, args, write=True, return_weight
     if not os.path.isdir('./results/' + args.dataset_name):
         os.mkdir('./results/' + args.dataset_name)
     if write:
-        write_to_file(path='./results/' + args.dataset_name + '/smlmulti-hard.csv', data=predict)
+        write_to_file(path='./results/' + args.dataset_name + '/smlovr.csv', data=predict)
     if return_weights_all:
         return score * 100, acc_score * 100, weights_final / class_num, predict, weights_all
     return score * 100, acc_score * 100, weights_final / class_num, predict
 
 
-def SML_onevsrest_online_vs_offline(preds_all, labels, class_num, args):
+def SML_OVR_online_vs_offline(preds_all, labels, class_num, args):
     preds_one_hot = []
     for i in range(len(preds_all)):
         max_indices = preds_all[i]
@@ -244,9 +244,6 @@ def SML_onevsrest_online_vs_offline(preds_all, labels, class_num, args):
             cnt += 0
     end_time = time.perf_counter()
 
-    # print(preds_all.shape)
-    # print('online total same', cnt)
-
     bca_score = balanced_accuracy_score(labels, predict_all) * 100
     acc_score = accuracy_score(labels, predict_all) * 100
 
@@ -301,7 +298,6 @@ def pred_single(preds, labels, args):
     return scores_arr, acc_scores_arr
 
 
-
 def seed_everything(args):
     random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -336,6 +332,8 @@ if __name__ == '__main__':
     else:
         n_classes = 3
 
+    print('# BCA / ACC scores')
+
     print('Single')
     true_scores, true_acc_scores = pred_single(preds, labels, args)
     print('#' * 30)
@@ -344,13 +342,13 @@ if __name__ == '__main__':
     print('Voting')
     print(np.round(voting_bca, 2), np.round(voting_acc, 2))
 
-    smlovr_bca, smlovr_acc, weights_sml, sml_pred = SML_onevsrest_hard(preds, labels, n_classes, args, write=False)  # offline
+    smlovr_bca, smlovr_acc, weights_sml, sml_pred = SML_OVR(preds, labels, n_classes, args, write=True)  # offline
     print('SML-OVR')
     print(np.round(smlovr_bca, 2), np.round(smlovr_acc, 2))
 
-    online_bca, online_acc = SML_onevsrest_online_vs_offline(preds, labels, n_classes, args)  # online
+    online_bca, online_acc = SML_OVR_online_vs_offline(preds, labels, n_classes, args)  # online
     print('SML-OVR online')
-    print(np.round(smlovr_bca), np.round(smlovr_acc, 2))
+    print(np.round(smlovr_bca, 2), np.round(smlovr_acc, 2))
 
     num_samples = len(labels)
     num_models = len(preds)
@@ -435,7 +433,7 @@ if __name__ == '__main__':
         encoded_arr[np.arange(preds.shape[1]), max_indices] = 1
         preds_one_hot_LAA.append(encoded_arr)
     preds_one_hot_LAA = np.concatenate(preds_one_hot_LAA, axis=1)
-    laa_pred = LAA_net(preds, preds_one_hot_LAA, n_classes)
+    laa_pred = LAA_net(preds, preds_one_hot_LAA, n_classes, voting_pred)
     write_to_file(path='./results/' + args.dataset_name + '/laa.csv', data=laa_pred)
     print('LAA')
     print(np.round(balanced_accuracy_score(labels, laa_pred) * 100, 2), np.round(accuracy_score(labels, laa_pred) * 100, 2))
@@ -446,31 +444,14 @@ if __name__ == '__main__':
     print('EBCC')
     print(np.round(balanced_accuracy_score(labels, ebcc_pred) * 100, 2), np.round(accuracy_score(labels, ebcc_pred) * 100, 2))
 
-    # i-SML
-    p_est, confusion_diagonals = estimate_multiclass(preds, labels)
-    # print("Estimated Class Probabilities:")
-    # print(p_est)
-    # print("\nTrue Class Probabilities:")
-    # print(np.bincount(labels) / len(labels))
-    # print("\nEstimated Confusion Diagonals (Classifier Accuracies per Class):")
-    # print(confusion_diagonals)
-    weighted_preds = np.zeros((len(labels), n_classes))
-    for k in range(n_classes):
-        for i in range(len(preds)):
-            weighted_preds[:, k] += (preds[i] == k) * confusion_diagonals[i, k]
-    isml_pred = np.argmax(weighted_preds, axis=1)
-    print('i-SML BCA ACC')
-    print(np.round(balanced_accuracy_score(labels, isml_pred) * 100, 2),
-          np.round(accuracy_score(labels, isml_pred) * 100, 2))
+    input('Main results done.\nPress enter for ranking and pruning experiment.')
 
-
-    input('Main results done.\nPress any key for ranking and pruning experiment.')
-
-    # continuous removal of worst classifier
+    # ensemble pruning
+    # iterative removal of worst classifier
     minimum_ind = None
     curr_model_names = model_names.copy()
     curr_inds = np.arange(len(model_names), dtype=int)
-    for i in range(len(curr_model_names) - 3):  # removal till three classifiers
+    for i in range(len(curr_model_names) - 3):  # prune till three classifiers
         print('#' * 50)
         print('#' * 50)
         scores = [0, 0]
@@ -496,7 +477,7 @@ if __name__ == '__main__':
         print('preds.shape', preds.shape)
 
         scores[0] = np.round(pred_voting_hard(preds, labels, n_classes, args, write=False), 2)
-        score, _, weights_sml, _ = SML_onevsrest_hard(preds, labels, n_classes, args, write=False)  # offline
+        score, _, weights_sml, _ = SML_OVR(preds, labels, n_classes, args, write=False)  # offline
         scores[1] = np.round(score, 2)
 
         cnt_skip = 0

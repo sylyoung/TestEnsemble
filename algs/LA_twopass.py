@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# @Time    : 2025/7/18
+# @Author  : Chenhao Liu
+# @File    : LA_twopass.py
+# A lightweight, effective, and efficient model for label aggregation in crowdsourcing
 import random
 from copy import deepcopy
 

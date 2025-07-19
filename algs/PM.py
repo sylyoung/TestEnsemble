@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# @Time    : 2025/7/18
+# @Author  : Chenhao Liu
+# @File    : PM.py
+# Crowdsourcing for multiple-choice question answering
+# and Resolving conflicts in heterogeneous data by truth discovery and source reliability estimation
 import math,random
 import numpy as np
 from sklearn.metrics import balanced_accuracy_score
@@ -35,9 +41,7 @@ def PM(preds, n_classes, iterr = 3):
         for worker in range(worker_num):
             dif = 0.0
             dif = np.sum(preds[worker,:]!=truth)
-            #print(worker,dif,np.round(balanced_accuracy_score(truth,preds[worker,:] ),5))
             if dif == 0.0:
-                # print worker, dif
                 dif = 0.00000001
 
             weight[worker] = dif
@@ -52,9 +56,6 @@ def PM(preds, n_classes, iterr = 3):
 
         predictions = np.einsum('a,abc->bc', weight, preds_one_hot)
         truth = np.argmax(predictions, axis=1)
-        #print(balanced_accuracy_score(labels, truth))
         iterr -= 1
 
-    #print('PM ensemble weights:')
-    #print(weight)
     return truth, weight

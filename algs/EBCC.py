@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# @Time    : 2025/7/18
+# @Author  : Chenhao Liu
+# @File    : EBCC.py
+# Exploiting worker correlation for label aggregation in crowdsourcing
 import numpy as np
 import scipy.sparse as ssp
 from scipy.special import digamma, gammaln
