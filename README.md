@@ -1,6 +1,6 @@
 # TestEnsemble
  
-This repo implements combination methods, using only the outputs of base models that are black boxes for ensemble learning.
+This repo implements combination methods, using only the outputs of base models for ensemble learning.
 
 ## Implementation of StackingNet, proposed in our paper "StackingNet: collective inference across independent AI foundation models".
 
