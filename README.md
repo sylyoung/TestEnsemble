@@ -1,6 +1,26 @@
 # TestEnsemble
  
-Implementation of SML-OVR, proposed in our paper "Black-Box Test-Time Ensemble".
+This repo implements combination methods, using only the outputs of base models that are black boxes for ensemble learning.
+
+## Implementation of StackingNet, proposed in our paper "StackingNet: collective inference across independent AI foundation models".
+
+The core advantages of StackingNet:
+1. computationally efficient (only requires minimum computation to train)
+2. privacy preservation (does not need any knowledge on base classifiers, except conditional independence)
+3. applicable to both regression and classification
+4. supports meta-combination, bias reduction, reliability ranking, and adversary pruning
+
+```sh 
+python regression_stackingnet.py
+```  
+
+```sh 
+python classification_stackingnet.py
+```  
+
+## Update for StackingNet: Oct.9 code upload. data not uploaded yet
+
+## Implementation of SML-OVR, proposed in our paper "Black-Box Test-Time Ensemble".
 
 SML-OVR utilizes only the base classifiers’ predictions on unlabeled test data, estimating the reliability of individual base classifiers and constructing a weighted ensemble that favors more accurate ones.
 
@@ -31,9 +51,19 @@ Please contact me at syoungli@hust.edu.cn or lsyyoungll@gmail.com for any questi
 ## Citation
 
 If you find this repo helpful, please cite our work:
+
 ```
-@Article{Li2024,
-  author  = {Li, Siyang and Wang, Ziwei and Chenhao, Liu and Wu, Dongrui},
+@Article{Li2025StackingNet,
+  author  = {Li, Siyang and Liu, Chenhao and Wu, Dongrui},
+  title   = {StackingNet: collective inference across independent AI foundation models},
+  year    = {2025},
+  month   = {under review,}
+}
+```
+
+```
+@Article{Li2025SML-OVR,
+  author  = {Li, Siyang and Wang, Ziwei and Liu, Chenhao and Wu, Dongrui},
   title   = {Black-Box Test-Time Ensemble},
   year    = {2025},
   month   = {under review,}
