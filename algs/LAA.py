@@ -8,23 +8,23 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 import torch.nn.functional as F
-from sklearn.metrics import balanced_accuracy_score
 
-
+# Encoding and decoding neural networks for LAA
+# Construct Classifier
 class Classifier(nn.Module):
-
+    """x -> y """
     def __init__(self, input_size, category_size):
         super().__init__()
         self.weights = nn.Parameter(torch.empty(input_size, category_size))
         self.biases = nn.Parameter(torch.empty(category_size))
-
+        # Initialize weights and biases
         nn.init.trunc_normal_(self.weights, mean=0.0, std=0.01)
         nn.init.zeros_(self.biases)
 
     def forward(self, x):
         return F.softmax(x @ self.weights + self.biases, dim=1)
 
-
+# Construct Decoder
 class Decoder(nn.Module):
 
     def __init__(self, category_size, input_size, source_wise_template):
@@ -32,7 +32,7 @@ class Decoder(nn.Module):
         self.weights = nn.Parameter(torch.empty(category_size, input_size))
         self.biases = nn.Parameter(torch.empty(input_size))
         self.template = source_wise_template
-
+        # Initialize weights and biases
         nn.init.trunc_normal_(self.weights, mean=0.0, std=0.01)
         nn.init.zeros_(self.biases)
 
@@ -64,11 +64,13 @@ def LAA_net(preds, preds_one_hot, num_labels, voted_preds):
         lr=0.005
     )
 
+    # train classifier first
     epochs = 50
     for epoch in range(epochs):
         total_hit = 0
 
         for i in range(n_samples // batch_size):
+            # Get all data
             batch_x = torch.FloatTensor(user_labels)
             batch_majority_y = torch.FloatTensor(majority_y)
             labels = batch_majority_y.squeeze().long()
@@ -78,11 +80,13 @@ def LAA_net(preds, preds_one_hot, num_labels, voted_preds):
 
             y_classifier = classifier(batch_x)
 
+            # loss classifier
             loss_classifier_x_y = criterion_cross_entropy(y_classifier, batch_majority_y)
 
             loss_classifier_x_y.backward()
             optimizer.step()
 
+    # train decoder
     epochs = 100
     for epoch in range(epochs):
         total_hit = 0
