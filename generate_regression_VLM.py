@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2024/6/1
-# @Author  : Siyang Li
+# @Author  : ???
 # @File    : generate_regression.py
 # generate regression results using VLMs on image-text datasets
 import sys, os, argparse, random

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2025/7/18
-# @Author  : Chenhao Liu
+# @Author  : ???
 # @File    : ZC.py
 # ZenCrowd: leveraging probabilistic reasoning and crowdsourcing techniques for large-scale entity linking
 import math

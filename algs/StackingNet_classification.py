@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2025/8/15
-# @Author  : Chenhao Liu and Siyang Li
+# @Author  : ???
 # @File    : StackingNet_classification.py
 import numpy as np
 import torch
@@ -97,12 +97,6 @@ def train(net, num_epochs, optimizer, train_loader, target, loss, args):
                     loss_combined = task_loss + pm + args.regularization_weight * sigma
                 else:
                     loss_combined = task_loss + pm
-            elif args.loss == 'theta':
-                weights_sum = net.weights.sum()
-                # reg_loss = 100*(weights_sum - 1) ** 2
-                std = torch.std(outputs_target)
-                theta = 10 * (std - torch.std(outputs_source)) ** 2
-                loss_combined = task_loss + theta
             else:
                 loss_combined = task_loss
 
@@ -197,8 +191,6 @@ def Stacking_Classification(args, n_classes, preds_test, weight_init=None, preds
 
     in_features = preds_one_hot_test.shape[1]
     weight_init = torch.tensor(weight_init).reshape(in_features // n_classes, 1)
-
-    # print('weight_init': np.array2string(weight_init.numpy(), precision=4, suppress_small=True))
 
     net = Net(in_features, n_classes, weight_init, args.use_dropout, args.dropout_rate, args.regularization_relu)
 

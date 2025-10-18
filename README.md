@@ -44,28 +44,4 @@ The classification results could also be generated from the LLMs on your own, us
 python generate_classification.py
 ```  
 
-## Contact
-
-Please contact me at syoungli@hust.edu.cn or lsyyoungll@gmail.com for any questions regarding the paper, and use Issues for any questions regarding the code.
-
-## Citation
-
-If you find this repo helpful, please cite our work:
-
-```
-@Article{Li2025StackingNet,
-  author  = {Li, Siyang and Liu, Chenhao and Wu, Dongrui},
-  title   = {StackingNet: collective inference across independent AI foundation models},
-  year    = {2025},
-  month   = {under review,}
-}
-```
-
-```
-@Article{Li2025SML-OVR,
-  author  = {Li, Siyang and Wang, Ziwei and Liu, Chenhao and Wu, Dongrui},
-  title   = {Black-Box Test-Time Ensemble},
-  year    = {2025},
-  month   = {under review,}
-}
-```
+## Contact and Citation information omitted for now

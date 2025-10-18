@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2025/7/18
-# @Author  : Chenhao Liu
+# @Author  : ???
 # @File    : LAA.py
 # Aggregating crowd wisdoms with label-aware autoencoders
 import torch

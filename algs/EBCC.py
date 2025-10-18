@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2025/7/18
-# @Author  : Chenhao Liu
+# @Author  : ???
 # @File    : EBCC.py
 # Exploiting worker correlation for label aggregation in crowdsourcing
 import numpy as np

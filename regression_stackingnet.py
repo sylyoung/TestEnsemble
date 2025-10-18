@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2025/8/24
-# @Author  : Siyang Li and Chenhao Liu
+# @Author  : ???
 # @File    : regression.py
 # implementation for our paper "StackingNet: collective inference across independent AI foundation models"
 # this file conducts combination methods for regression datasets of research paper review and CFD

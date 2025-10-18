@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2025/7/18
-# @Author  : Siyang Li
+# @Author  : ???
 # @File    : ensemble.py
 # black-box test-time ensemble using multiple base classifiers' predictions
 import time, sys, argparse, random, os

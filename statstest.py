@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2024/3/30
-# @Author  : Siyang Li
+# @Author  : ???
 # @File    : statstest.py
 # produce statistical testing results
 import numpy as np

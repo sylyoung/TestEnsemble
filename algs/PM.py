@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2025/7/18
-# @Author  : Chenhao Liu
+# @Author  : ???
 # @File    : PM.py
 # Crowdsourcing for multiple-choice question answering
 # and Resolving conflicts in heterogeneous data by truth discovery and source reliability estimation

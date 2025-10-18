@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2025/8/15
-# @Author  : Chenhao Liu and Siyang Li
+# @Author  : ???
 # @File    : classification_stackingnet.py
 # implementation for our paper "StackingNet: collective inference across independent AI foundation models"
 # this file conducts combination methods for classification datasets from HELM benchmark
