@@ -15,29 +15,26 @@ from sklearn.metrics import balanced_accuracy_score, ndcg_score
 from crowdkit.aggregation import DawidSkene, Wawa, MMSR, MACE, GLAD, KOS
 import sys, argparse, random, os, statistics, json
 
-from algs.PM import PM
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+from algs.PM_ import PM
 from algs.ZC import ZC
 from algs.LA_twopass import one_pass, two_pass
 from algs.LAA import LAA_net
 from algs.EBCC import ebcc_vb
 from algs.StackingNet_classification import Stacking_Classification
 from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.linear_model import LogisticRegression
 
 
 def ReadLabel(args):
-    if args.dataset_name == 'bbq':
-        n_classes = 3
-        args.dataset_path = 'bbq/bbq:subject=all,method=multiple_choice_joint'
-        args.backend_path = ''
-        labels = np.loadtxt(
-            './logs/helm/bbq/bbq:subject=all,method=multiple_choice_joint,model=ai21_j1-grande-v2-beta_ground_truth.csv').astype(
-            int)
-    elif args.dataset_name == 'boolq':
+    if args.dataset_name == 'boolq':
         n_classes = 2
         args.dataset_path = 'boolq/boolq:'
         args.backend_path = ',data_augmentation=canonical'
         labels = np.loadtxt(
-            './logs/helm/boolq/boolq:model=ai21_j1-jumbo,data_augmentation=canonical_ground_truth.csv').astype(int)
+            './logs/helm/boolq/boolq:model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(int)
     elif args.dataset_name == 'civil_comments':
         n_classes = 2
         args.dataset_path = ['civil_comments/civil_comments:demographic=LGBTQ,',
@@ -51,31 +48,31 @@ def ReadLabel(args):
                              'civil_comments/civil_comments:demographic=white,']
         args.backend_path = ',data_augmentation=canonical'
         labels = [np.loadtxt(
-            './logs/helm/civil_comments/civil_comments:demographic=LGBTQ,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+            './logs/helm/civil_comments/civil_comments:demographic=LGBTQ,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
             int),
             np.loadtxt(
-                './logs/helm/civil_comments/civil_comments:demographic=all,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/civil_comments/civil_comments:demographic=all,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/civil_comments/civil_comments:demographic=black,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/civil_comments/civil_comments:demographic=black,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/civil_comments/civil_comments:demographic=christian,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/civil_comments/civil_comments:demographic=christian,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/civil_comments/civil_comments:demographic=female,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/civil_comments/civil_comments:demographic=female,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/civil_comments/civil_comments:demographic=male,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/civil_comments/civil_comments:demographic=male,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/civil_comments/civil_comments:demographic=muslim,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/civil_comments/civil_comments:demographic=muslim,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/civil_comments/civil_comments:demographic=other_religions,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/civil_comments/civil_comments:demographic=other_religions,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/civil_comments/civil_comments:demographic=white,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/civil_comments/civil_comments:demographic=white,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int), ]
         labels = np.concatenate(labels)
     elif args.dataset_name == 'entity_matching':
@@ -85,13 +82,13 @@ def ReadLabel(args):
                              'entity_matching/entity_matching:dataset=Dirty_iTunes_Amazon,']
         args.backend_path = ''
         labels = [np.loadtxt(
-            './logs/helm/entity_matching/entity_matching:dataset=Abt_Buy,model=AlephAlpha_luminous-base_ground_truth.csv').astype(
+            './logs/helm/entity_matching/entity_matching:dataset=Abt_Buy,model=ai21_j2-jumbo_ground_truth.csv').astype(
             int),
             np.loadtxt(
-                './logs/helm/entity_matching/entity_matching:dataset=Beer,model=AlephAlpha_luminous-base_ground_truth.csv').astype(
+                './logs/helm/entity_matching/entity_matching:dataset=Beer,model=ai21_j2-jumbo_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/entity_matching/entity_matching:dataset=Dirty_iTunes_Amazon,model=AlephAlpha_luminous-base_ground_truth.csv').astype(
+                './logs/helm/entity_matching/entity_matching:dataset=Dirty_iTunes_Amazon,model=ai21_j2-jumbo_ground_truth.csv').astype(
                 int)]
         labels = np.concatenate(labels)
     elif args.dataset_name == 'imdb':
@@ -102,7 +99,6 @@ def ReadLabel(args):
             './logs/helm/imdb/imdb:model=together_bloom,instructions=expert,groups=ablation_prompts_ground_truth.csv').astype(
             int)
     elif args.dataset_name == 'legal_support':
-        # results of two extra models not used: openai_code-cushman-001 openai_code-davinci-002
         n_classes = 2
         args.dataset_path = 'legal_support/legal_support,method=multiple_choice_joint:'
         args.backend_path = ''
@@ -114,7 +110,7 @@ def ReadLabel(args):
         args.dataset_path = 'lsat_qa/lsat_qa:task=all,method=multiple_choice_joint'
         args.backend_path = ''
         labels = np.loadtxt(
-            './logs/helm/lsat_qa/lsat_qa:task=all,method=multiple_choice_joint,model=ai21_j1-grande-v2-beta_ground_truth.csv').astype(
+            './logs/helm/lsat_qa/lsat_qa:task=all,method=multiple_choice_joint,model=ai21_j2-jumbo_ground_truth.csv').astype(
             int)
     elif args.dataset_name == 'mmlu':
         n_classes = 4
@@ -125,15 +121,15 @@ def ReadLabel(args):
                              'mmlu/mmlu:subject=us_foreign_policy,method=multiple_choice_joint,']
         args.backend_path = ',data_augmentation=canonical'
         labels = [np.loadtxt(
-            './logs/helm/mmlu/mmlu:subject=abstract_algebra,method=multiple_choice_joint,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+            './logs/helm/mmlu/mmlu:subject=abstract_algebra,method=multiple_choice_joint,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
             int), np.loadtxt(
-            './logs/helm/mmlu/mmlu:subject=college_chemistry,method=multiple_choice_joint,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+            './logs/helm/mmlu/mmlu:subject=college_chemistry,method=multiple_choice_joint,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
             int), np.loadtxt(
-            './logs/helm/mmlu/mmlu:subject=computer_security,method=multiple_choice_joint,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+            './logs/helm/mmlu/mmlu:subject=computer_security,method=multiple_choice_joint,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
             int), np.loadtxt(
-            './logs/helm/mmlu/mmlu:subject=econometrics,method=multiple_choice_joint,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+            './logs/helm/mmlu/mmlu:subject=econometrics,method=multiple_choice_joint,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
             int), np.loadtxt(
-            './logs/helm/mmlu/mmlu:subject=us_foreign_policy,method=multiple_choice_joint,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+            './logs/helm/mmlu/mmlu:subject=us_foreign_policy,method=multiple_choice_joint,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
             int)]
         labels = np.concatenate(labels)
     elif args.dataset_name == 'raft':
@@ -151,108 +147,39 @@ def ReadLabel(args):
                              'raft/raft:subset=twitter_complaints,', ]
         args.backend_path = ',data_augmentation=canonical'
         labels = [np.loadtxt(
-            './logs/helm/raft/raft:subset=ade_corpus_v2,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+            './logs/helm/raft/raft:subset=ade_corpus_v2,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
             int),
             np.loadtxt(
-                './logs/helm/raft/raft:subset=banking_77,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/raft/raft:subset=banking_77,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/raft/raft:subset=neurips_impact_statement_risks,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/raft/raft:subset=neurips_impact_statement_risks,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/raft/raft:subset=one_stop_english,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/raft/raft:subset=one_stop_english,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/raft/raft:subset=overruling,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/raft/raft:subset=overruling,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/raft/raft:subset=semiconductor_org_types,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/raft/raft:subset=semiconductor_org_types,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/raft/raft:subset=systematic_review_inclusion,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/raft/raft:subset=systematic_review_inclusion,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/raft/raft:subset=tai_safety_research,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/raft/raft:subset=tai_safety_research,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/raft/raft:subset=terms_of_service,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/raft/raft:subset=terms_of_service,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/raft/raft:subset=tweet_eval_hate,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/raft/raft:subset=tweet_eval_hate,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int),
             np.loadtxt(
-                './logs/helm/raft/raft:subset=twitter_complaints,model=ai21_j1-grande,data_augmentation=canonical_ground_truth.csv').astype(
+                './logs/helm/raft/raft:subset=twitter_complaints,model=ai21_j2-jumbo,data_augmentation=canonical_ground_truth.csv').astype(
                 int)]
         labels = np.concatenate(labels)
-    '''
-    # all model list
-    model_names = ['AlephAlpha_luminous-base',
-                'AlephAlpha_luminous-extended',
-                'AlephAlpha_luminous-supreme',
-                'ai21_j1-grande',
-                'ai21_j1-grande-v2-beta',
-                'ai21_j1-jumbo',
-                'ai21_j1-large',
-                'ai21_j2-grande',
-                'ai21_j2-jumbo',
-                'ai21_j2-large',
-                'anthropic_stanford-online-all-v4-s3',
-                'cohere_command-medium-beta',
-                'cohere_command-xlarge-beta',
-                'cohere_large-20220720',
-                'cohere_medium-20220720',
-                'cohere_medium-20221108',
-                'cohere_small-20220720',
-                'cohere_xlarge-20220609',
-                'cohere_xlarge-20221108',
-                'eleutherai_pythia-12b-v0',
-                'eleutherai_pythia-6.9b',
-                'lmsys_vicuna-13b-v1.3',
-                'lmsys_vicuna-7b-v1.3',
-                'meta_llama-13b',
-                'meta_llama-2-13b',
-                'meta_llama-2-70b',
-                'meta_llama-2-7b',
-                'meta_llama-30b',
-                'meta_llama-65b',
-                'meta_llama-7b',
-                'microsoft_TNLGv2_530B',
-                'microsoft_TNLGv2_7B',
-                'mosaicml_mpt-30b',
-                'mosaicml_mpt-instruct-30b',
-                'openai_ada',
-                'openai_babbage',
-                'openai_curie',
-                'openai_davinci',
-                'openai_gpt-3.5-turbo-0301',
-                'openai_gpt-3.5-turbo-0613',
-                'openai_text-ada-001',
-                'openai_text-babbage-001',
-                'openai_text-curie-001',
-                'openai_text-davinci-002',
-                'openai_text-davinci-003',
-                'stanford_alpaca-7b',
-                'tiiuae_falcon-40b',
-                'tiiuae_falcon-40b-instruct',
-                'tiiuae_falcon-7b',
-                'tiiuae_falcon-7b-instruct',
-                'together_bloom',
-                'together_glm,stop=hash',
-                'together_gpt-j-6b',
-                'together_gpt-neox-20b',
-                'together_opt-175b',
-                'together_opt-66b',
-                'together_redpajama-incite-base-3b-v1',
-                'together_redpajama-incite-base-7b',
-                'together_redpajama-incite-instruct-3b-v1',
-                'together_redpajama-incite-instruct-7b',
-                'together_t0pp,stop=hash',
-                'together_t5-11b,stop=hash',
-                'together_ul2,stop=hash,global_prefix=nlg',
-                'together_yalm',
-                'writer_palmyra-instruct-30',
-                'writer_palmyra-x']
-    '''
     return labels, n_classes
 
 
@@ -414,13 +341,11 @@ def Stacking(args, preds_test, preds_golden=None, labels_golden=None, return_mod
             weight_init = pred_single(preds_golden, labels_golden)  # Calculate the BCA of each model on golden labeled data
             weight = [a for a in weight_init]
             weight_init = weight / sum(weight)
-            # weight_init = log_odds_to_convex(weight)
         elif args.golden_num == 0:
             voting_pred = voting(preds_test, n_classes)
             weight_init = pred_single(preds_test, voting_pred)  # Calculate the BCA of each model through Voting on test data
             weight = [a for a in weight_init]
             weight_init = weight / sum(weight)
-            # weight_init = args.weights_sml
     else:
         weight_init = np.ones(args.workers, dtype=float) / args.workers
     print('StackingNet weight_init:', weight_init)
@@ -568,9 +493,6 @@ def Data_Logging(args, results, preds):
     with open(f'./results/{args.log}_config.json', 'w') as f:
         json.dump(serialize_args(args), f, indent=4)
 
-    # with open('./results/' + args.log + '_config.json', 'r') as f:
-    #     loaded_args = argparse.Namespace(**json.load(f))
-
 
 def construct_dataframe_crowdkit(preds, num_workers):
     num_samples = preds.shape[1]
@@ -579,10 +501,6 @@ def construct_dataframe_crowdkit(preds, num_workers):
     a_3 = np.transpose(preds, (1, 0)).reshape(-1,) + 1
     A = np.stack([a_1, a_2, a_3])
     A = np.transpose(A, (1, 0))
-    # b_1 = np.arange(num_samples) + 1
-    # b_2 = labels.reshape(-1,) + 1
-    # B = np.stack([b_1, b_2])
-    # B = np.transpose(B, (1, 0))
     df = pd.DataFrame(A, columns=['task', 'worker', 'label'])
     return df
 
@@ -742,8 +660,6 @@ if __name__ == '__main__':
 
     # Prediction results to 8 datasets are almost available to all model_names listed below
     # Datasets: boolq, raft, mmlu, civil_comments, lsat, legal_support, imdb, entity_matching
-    # For better performance (removing close-to-random bad models), only 10 are retained
-    # see below model_namesmodels
 
     parser = argparse.ArgumentParser(description='ranking experiment')
     parser.add_argument('--seed', type=int, default=1, help='random seed for start')
@@ -780,9 +696,9 @@ if __name__ == '__main__':
     else:
         args.workers = 10
 
-    args.path = './args/' + args.log + args.dataset_name + '.txt'
-    with open(args.path, 'w', encoding='utf-8') as f:
-        json.dump(args.__dict__, f, ensure_ascii=False, indent=2)
+    # args.path = './args/' + args.log + args.dataset_name + '.txt'
+    # with open(args.path, 'w', encoding='utf-8') as f:
+    #     json.dump(args.__dict__, f, ensure_ascii=False, indent=2)
 
     # GPU device id
     os.environ["CUDA_VISIBLE_DEVICES"] = '0,1,2,3,4,5,6,7'
@@ -857,7 +773,6 @@ if __name__ == '__main__':
         # If malicious==1, we add a randomly guessed model as a distractor
         # Plus, we let the model with the highest accuracy do the random output if the malicious == 2
 
-        # ---- after you finished injecting attacks into preds / model_names ----
         # record attack model index
         if args.malicious != 0:
             attacked_idx_fixed = None
@@ -892,6 +807,7 @@ if __name__ == '__main__':
         voting_score = []
         wawa_score = []
         dawidskene_score = []
+        clf_score = []
         mmsr_score = []
         mace_score = []
         glad_score = []
@@ -964,8 +880,6 @@ if __name__ == '__main__':
             else:
                 golden_num = int(preds.shape[1] // (100 // args.golden_num))
 
-            # golden_indices = np.random.choice(len(preds_train_T), size=golden_num, replace=False)
-
             # class-balanced sampling of labeled data
             if args.golden_num == 0:
                 preds_golden_and_test = preds_test
@@ -978,12 +892,14 @@ if __name__ == '__main__':
                     golden_num = int(args.golden_num_not_ratio * n_classes)
                 else:
                     sss = StratifiedShuffleSplit(n_splits=1, train_size=int(golden_num), random_state=seed)  # must be int to be interpreted as actual numbers
+
                 (golden_indices, _), = sss.split(np.zeros(len(labels_train_T)),
                                                  labels_train_T)
 
                 preds_golden = preds_train_T[golden_indices].T
                 labels_golden = labels_train_T[golden_indices].T
                 print('preds_golden.shape, labels_golden.shape:', preds_golden.shape, labels_golden.shape)
+
                 preds_golden_and_test = np.concatenate([preds_golden, preds_test], axis=1)
                 labels_golden_and_test = np.concatenate([labels_golden, labels_test])
                 print('preds_golden_and_test.shape, labels_golden_and_test.shape:', preds_golden_and_test.shape, labels_golden_and_test.shape)
@@ -1019,7 +935,6 @@ if __name__ == '__main__':
             print('WAwA: {:.2f}'.format(score))
 
             # Dawid-Skene
-            # dawidskene_pred = Get_DS(pred_golden_and_test_df)
             dawidskene_pred, ds = Get_DS(pred_golden_and_test_df, return_class=True)
             rel = worker_reliability(ds).tolist()
             print('Dawid-Skene Weights:', rel)  # printed as weights, but are actually the estimated accuracy/BCA from the estimated confusion matrices and the estimated class priors after EM from D-S
@@ -1032,6 +947,23 @@ if __name__ == '__main__':
             dawidskene_score.append(score)
             print('Dawid-Skene Estimated BCA:', ", ".join(f"{v:.3f}" for v in pred_single(preds_test, dawidskene_pred)))
             print('Dawid-Skene: {:.2f}'.format(score))
+
+            if args.golden_num != 0:
+                def onehot_stack(preds_MxN, n_classes):
+                    M, N = preds_MxN.shape
+                    eye = np.eye(n_classes)
+                    return np.concatenate([eye[preds_MxN[m]] for m in range(M)], axis=1)  # (N, M*K)
+                # Train
+                X_golden = onehot_stack(preds_golden, n_classes)
+                clf = LogisticRegression(max_iter=1000, multi_class="multinomial", solver="lbfgs")
+                clf.fit(X_golden, labels_golden)
+                # Predict
+                X_test = onehot_stack(preds_test, n_classes)
+                clf_pred = clf.predict(X_test)
+
+                score = np.round(balanced_accuracy_score(labels_test, clf_pred) * 100, 2)
+                clf_score.append(score)
+                print('StackingClassifier: {:.2f}'.format(score))
 
             # M-MSR
             mmsr_pred = MMSR(random_state=seed).fit_predict(pred_golden_and_test_df)
@@ -1087,7 +1019,7 @@ if __name__ == '__main__':
             print('SML: {:.2f}'.format(score))
 
             ##################################################################################
-            # StackingNet, proposed in our paper "StackingNet: Inference Aggregation of Independent Large Foundation Models Enables Collective AI"
+            # StackingNet
             if golden_num != 0:
                 stacking_pred, stackingnet = Stacking(args, preds_test, preds_golden, labels_golden, return_model=True)
             else:
@@ -1096,7 +1028,7 @@ if __name__ == '__main__':
             stacking_score.append(score)
             print('StackingNet Weights:', ", ".join(f"{v:.3f}" for v in stackingnet.weights.detach().cpu().flatten()))
             print('StackingNet Estimated BCA:', ", ".join(f"{v:.3f}" for v in pred_single(preds_test, stacking_pred)))
-            print('Stacking: {:.2f}'.format(score))
+            print('StackingNet: {:.2f}'.format(score))
             ##################################################################################
 
             if args.malicious != 0:
@@ -1174,13 +1106,14 @@ if __name__ == '__main__':
         # Document the performance results and prediction values
         results = {'Worst': single_worst, 'Average': single_avg, 'Best': single_best,
                    'Voting': voting_score, 'WAwA': wawa_score, 'Dawid-Skene': dawidskene_score,
+                   'StackingClassifier': clf_score,
                   'M-MSR': mmsr_score, 'MACE': mace_score, 'GLAD': glad_score, 'KOS': kos_score,
                    'SML': sml_score, 'LA': la_score, 'LAA': laa_score, 'EBCC': ebcc_score,
                    'PM': pm_score, 'ZenCrowd': zencrowd_score, 'Stacking': stacking_score}
         preds = {}
         for i, model_name in enumerate(model_names):
             preds[model_name] = preds_test[i]
-        preds.update({'Voting': voting_pred, 'WAwA': wawa_pred, 'Dawid-Skene': dawidskene_pred,
+        preds.update({'Voting': voting_pred, 'WAwA': wawa_pred, 'Dawid-Skene': dawidskene_pred, 'StackingClassifier': clf_pred,
                 'M-MSR': mmsr_pred, 'MACE': mace_pred, 'GLAD': glad_pred, 'KOS': kos_pred,
                 'SML': sml_pred, 'LA': la_pred, 'LAA': laa_pred, 'EBCC': ebcc_pred, 'PM': pm_pred,
                 'ZenCrowd': zencrowd_pred, 'Stacking': stacking_pred, 'Ground-Truth': labels_test})
