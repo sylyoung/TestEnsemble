@@ -18,7 +18,7 @@ python regression_stackingnet.py
 python classification_stackingnet.py
 ```  
 
-### Update for StackingNet: Oct.9 code upload. data not uploaded yet
+### Update for StackingNet: Oct.9 code upload. Oct. 20 data upload.
 
 ## Implementation of SML-OVR, proposed in our paper "Black-Box Test-Time Ensemble".
 
@@ -43,5 +43,7 @@ The classification results could also be generated from the LLMs on your own, us
 ```sh 
 python generate_classification.py
 ```  
+
+### Update for SML-OVR: Accepted at CIM. Oct.20 paper upload.
 
 ## Contact and Citation information omitted for now
