@@ -11,7 +11,7 @@ The core advantages of StackingNet:
 4. supports meta-combination, bias reduction, reliability ranking, and adversary pruning
 
 ```sh 
-python regression_stackingnet.py
+python regression_stackingnet_xxx.py
 ```  
 
 ```sh 
