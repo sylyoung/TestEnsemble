@@ -46,9 +46,7 @@ python regression_stackingnet_xxx.py
 
 ```sh 
 python classification_stackingnet.py
-```  
-
-### Update for StackingNet: Oct.9 code upload. Oct. 20 data upload.
+```
 
 ## Contact
 
