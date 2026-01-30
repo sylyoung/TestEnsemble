@@ -4,7 +4,7 @@
   <img src="figures/smlovr.png" width="100%">
 </p>
 
-## Implementation of SML-OVR, proposed in our paper "Black-Box Test-Time Ensemble" [IEEE](https://ieeexplore.ieee.org/document/11353100/).
+## Implementation of SML-OVR, proposed in our paper "Black-Box Test-Time Ensemble" [IEEE CIM](https://ieeexplore.ieee.org/document/11353100/).
 
 SML-OVR utilizes only the base classifiers’ predictions on unlabeled test data, estimating the reliability of individual base classifiers and constructing a weighted ensemble that favors more accurate ones.
 
