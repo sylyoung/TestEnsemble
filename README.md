@@ -1,4 +1,4 @@
-# TestEnsemble
+# TestEnsemble: To combine multiple base models' predictions
  
 <p align="center">
   <img src="figures/smlovr.png" width="100%">
