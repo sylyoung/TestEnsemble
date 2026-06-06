@@ -964,6 +964,14 @@ if __name__ == '__main__':
                 score = np.round(balanced_accuracy_score(labels_test, clf_pred) * 100, 2)
                 clf_score.append(score)
                 print('StackingClassifier: {:.2f}'.format(score))
+            else:
+                # COMPAT: the supervised StackingClassifier (LogisticRegression) is undefined
+                # without labels. For the unsupervised (golden_num=0) run, mirror the
+                # KOS-unavailable pattern so Data_Logging completes; this column is ignored
+                # in the unsupervised block of Table 1.
+                clf_pred = voting_pred
+                clf_score.append(0.)
+                print('StackingClassifier not used in unsupervised (golden_num=0) run.')
 
             # M-MSR
             mmsr_pred = MMSR(random_state=seed).fit_predict(pred_golden_and_test_df)
@@ -1071,7 +1079,11 @@ if __name__ == '__main__':
             ebcc_score.append(score)
             print('EBCC: {:.2f}'.format(score))
 
-            pm_pred = Get_PM(preds_golden_and_test, n_classes, voting_pred, args.workers)
+            # COMPAT: in the supervised (golden_num>0) run, preds_golden_and_test includes the
+            # golden rows, so the initial "truth" must too -- mirror the LAA handling above
+            # (otherwise PM gets a test-length voting_pred and broadcasts against golden+test).
+            pm_truth = np.concatenate([labels_golden, voting_pred]) if golden_num != 0 else voting_pred
+            pm_pred = Get_PM(preds_golden_and_test, n_classes, pm_truth, args.workers)
             pm_pred = pm_pred[golden_num:]
             score = np.round(balanced_accuracy_score(labels_test, pm_pred) * 100, 2)
             pm_score.append(score)
