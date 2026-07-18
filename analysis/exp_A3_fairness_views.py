@@ -48,6 +48,12 @@ def maxw1(v,gid,gs):
         for j in range(i+1,len(pr)):
             w=max(w,float(wasserstein_distance(v[gid==pr[i]],v[gid==pr[j]])))
     return w
+def grp_mean(v,gid,gs): return np.array([v[gid==g].mean() for g in gs if (gid==g).sum()>0])
+def dpgap(v,gid,gs):
+    # demographic-parity disparity measured the same mean-based way as the accuracy
+    # parity gap, but on the absolute predictions rather than the error: the difference
+    # between the largest and smallest per-group mean prediction.
+    m=grp_mean(v,gid,gs); return float(m.max()-m.min())
 def ci(es_sn,es_bb,gid,gs,fn,n=1000):
     idx=np.arange(len(gid)); d=[]
     for _ in range(n):
@@ -71,13 +77,14 @@ for attr in ATTRS:
         for m in [best,'Averaging','StackingNet']:
             es=P[m]-y; ea=np.abs(es)
             methods[m]={'worst':worst(ea,gid,gs),'gap':gap(ea,gid,gs),'cov':cov(ea,gid,gs),
-                        'w1_pred':maxw1(P[m],gid,gs),'bias_amp':gap(ea,gid,gs)-mean_base_gap}
-        w1_label=maxw1(y,gid,gs)
+                        'w1_pred':maxw1(P[m],gid,gs),'dp_gap':dpgap(P[m],gid,gs),
+                        'bias_amp':gap(ea,gid,gs)-mean_base_gap}
+        w1_label=maxw1(y,gid,gs); dp_gap_label=dpgap(y,gid,gs)
         ci_worst=ci(P['StackingNet']-y,P[best]-y,gid,gs,worst)
         ci_gap=ci(P['StackingNet']-y,P[best]-y,gid,gs,gap)
-        rec['axes'][axis]={'methods':methods,'w1_label':w1_label,
+        rec['axes'][axis]={'methods':methods,'w1_label':w1_label,'dp_gap_label':dp_gap_label,
                            'ci_worst_sn_minus_bb':ci_worst,'ci_gap_sn_minus_bb':ci_gap}
-        fig_data[axis]['lab'].append(w1_label); fig_data[axis]['bb'].append(methods[best]['w1_pred']); fig_data[axis]['sn'].append(methods['StackingNet']['w1_pred'])
+        fig_data[axis]['lab'].append(dp_gap_label); fig_data[axis]['bb'].append(methods[best]['dp_gap']); fig_data[axis]['sn'].append(methods['StackingNet']['dp_gap'])
     out[attr]=rec
 os.makedirs(os.path.join(REPO,'results','analysis','figures'),exist_ok=True)
 json.dump(out,open(os.path.join(REPO,'results','analysis','expA3_fairness_views.json'),'w'),indent=1)
@@ -94,11 +101,11 @@ print("VIEW 1  Accuracy parity (worst-group MAE / gap), StackingNet better than 
 for ax in ['race','gender']:
     cw=sum(out[a]['axes'][ax]['ci_worst_sn_minus_bb'][2]<0 for a in ATTRS)
     print(f"  {ax:6s}: worst-MAE improved {tally(ax,'worst')}/13 ({cw}/13 CI<0) ; gap improved {tally(ax,'gap')}/13")
-print("VIEW 2  Demographic parity (Wasserstein-1 pred vs label):")
+print("VIEW 2  Demographic parity (between-group mean-prediction gap, pred vs label):")
 for ax in ['race','gender']:
-    noamp=sum(out[a]['axes'][ax]['methods']['StackingNet']['w1_pred']<=out[a]['axes'][ax]['w1_label']+1e-9 for a in ATTRS)
+    noamp=sum(out[a]['axes'][ax]['methods']['StackingNet']['dp_gap']<=out[a]['axes'][ax]['dp_gap_label']+1e-9 for a in ATTRS)
     al=np.mean(fig_data[ax]['lab']); ab=np.mean(fig_data[ax]['bb']); asn=np.mean(fig_data[ax]['sn'])
-    print(f"  {ax:6s}: StackingNet W1(pred)<=W1(label) {noamp}/13 ; avg W1 label {al:.3f} best-base {ab:.3f} StackingNet {asn:.3f}")
+    print(f"  {ax:6s}: StackingNet gap<=label gap {noamp}/13 ; avg gap label {al:.3f} best-base {ab:.3f} StackingNet {asn:.3f}")
 print("VIEW 3  Bias amplification (gap vs mean base), StackingNet negative (reduces) on:")
 for ax in ['race','gender']:
     neg=sum(out[a]['axes'][ax]['methods']['StackingNet']['bias_amp']<0 for a in ATTRS)

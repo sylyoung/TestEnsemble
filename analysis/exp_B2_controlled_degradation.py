@@ -18,7 +18,7 @@ Part 1 (the averaging mechanism):
   the y-axis is exactly "averaging MSE / best-single-model MSE".
 
 Part 2 (StackingNet vs averaging under a growing redundant cluster):
-  We hold M=8 base regressors of EQUAL error variance, so the best single model is the
+  We hold a pool of M base regressors of EQUAL error variance, so the best single model is the
   same throughout and no model is "better" or "worse". We then make a cluster of c of
   them mutually redundant: the c cluster members share one common error term (perfectly
   correlated), while the remaining M-c members have independent errors. As c grows from
@@ -87,31 +87,42 @@ def fit_stackingnet(Xtr, ytr, Xte, lr=0.01, epochs=300, seed=0):
     return pred, m.scales.detach().numpy().copy(), float(m.biases.detach())
 
 
-def redundancy_experiment(M=8, n=6000, sigma=1.0, train_frac=0.3, seeds=range(10)):
+def redundancy_experiment(M=8, n=10000, sigma=1.0, train_frac=0.01, n_rep=30, data_seed=0, cluster_sizes=None):
     """Equal-quality base regressors; grow a redundant (perfectly correlated) cluster of
     size c. Report test MSE (relative to the single-model MSE) for best-single, averaging,
-    and the supervised StackingNet, averaged over seeds with std."""
+    and the supervised StackingNet. cluster_sizes lets a large M be sampled on a coarse grid
+    instead of every integer.
+
+    The synthetic data is drawn once per cluster size (held fixed), and the reported mean and
+    standard deviation are taken over n_rep repetitions that each draw an independent labeled
+    subset and an independent StackingNet weight initialization. The spread therefore reflects
+    the two sources of run-to-run variability under few-shot supervision -- which samples happen
+    to be labeled and how the weights are initialized -- rather than resampling of the data."""
     rows = []
-    for c in range(1, M + 1):
-        bs, av, sn = [], [], []
-        for seed in seeds:
-            rng = np.random.default_rng(1000 + seed)
-            y = rng.standard_normal(n)
-            shared = rng.standard_normal(n)                      # common error of the cluster
-            E = np.empty((n, M))
-            E[:, :c] = shared[:, None]                           # c perfectly redundant members
-            E[:, c:] = rng.standard_normal((n, M - c))           # M-c independent members
-            X = y[:, None] + sigma * E                           # each predictor = y + error
-            single_mse = sigma ** 2                              # equal for every model (variance of error)
-            idx = rng.permutation(n); ntr = int(train_frac * n)
+    cs = list(cluster_sizes) if cluster_sizes is not None else list(range(1, M + 1))
+    for c in cs:
+        # one fixed synthetic pool for this cluster size
+        drng = np.random.default_rng(7919 * (data_seed + 1) + c)
+        y = drng.standard_normal(n)
+        shared = drng.standard_normal(n)                         # common error of the cluster
+        E = np.empty((n, M))
+        E[:, :c] = shared[:, None]                               # c perfectly redundant members
+        E[:, c:] = drng.standard_normal((n, M - c))              # M-c independent members
+        X = y[:, None] + sigma * E                               # each predictor = y + error
+        single_mse = sigma ** 2                                  # equal for every model (variance of error)
+        # 1% labeled, but never fewer than M+1 so the (M+1)-parameter fit stays determined
+        ntr = max(M + 1, int(round(train_frac * n)))
+        av, sn = [], []
+        for rep in range(n_rep):
+            srng = np.random.default_rng(50000 + rep)            # independent labeled-subset choice
+            idx = srng.permutation(n)
             tr, te = idx[:ntr], idx[ntr:]
             avg_pred = X[te].mean(axis=1)
             av.append(np.mean((avg_pred - y[te]) ** 2) / single_mse)
-            sn_pred, _, _ = fit_stackingnet(X[tr], y[tr], X[te], seed=seed)
+            sn_pred, _, _ = fit_stackingnet(X[tr], y[tr], X[te], seed=rep)  # independent initialization
             sn.append(np.mean((sn_pred - y[te]) ** 2) / single_mse)
-            bs.append(1.0)                                       # best single = single (all equal)
         rows.append({"cluster_size": c, "n_independent_votes": M - c + 1,
-                     "best_single_rel": 1.0,
+                     "best_single_rel": 1.0, "n_labeled": int(ntr), "train_frac": float(train_frac),
                      "averaging_rel_mean": float(np.mean(av)), "averaging_rel_std": float(np.std(av)),
                      "stackingnet_rel_mean": float(np.mean(sn)), "stackingnet_rel_std": float(np.std(sn))})
     return {"M": M, "rows": rows}
@@ -128,16 +139,23 @@ def main():
     for r in syn:
         print(f"  {r['rho']:.1f}   emp {r['empirical_reduction']:.3f}  theory {r['theory_reduction']:.3f}")
 
-    red = redundancy_experiment()
-    print(f"\n== Part 2: grow a redundant cluster among M={red['M']} equal-quality regressors ==")
-    print("  c  indep_votes  best_single  averaging(MSE/single)  StackingNet(MSE/single)")
-    for r in red['rows']:
-        print(f"  {r['cluster_size']:2d}      {r['n_independent_votes']:2d}        {r['best_single_rel']:.3f}     "
-              f"{r['averaging_rel_mean']:.3f} +/- {r['averaging_rel_std']:.3f}     "
-              f"{r['stackingnet_rel_mean']:.3f} +/- {r['stackingnet_rel_std']:.3f}")
+    # Part 2 for two pool sizes (M = 10 and M = 100): small M uses every cluster size,
+    # large M is sampled on a clean stride-of-ten grid (plus the fully independent c=1
+    # anchor) so markers fall on round numbers and stay legible.
+    by_M = {}
+    for M in (10, 100):
+        cs = list(range(1, M + 1)) if M <= 12 else [1] + list(range(10, M + 1, 10))
+        red = redundancy_experiment(M=M, cluster_sizes=cs)
+        by_M[str(M)] = red
+        print(f"\n== Part 2: grow a redundant cluster among M={M} equal-quality regressors ==")
+        print("  c  indep_votes  best_single  averaging(MSE/single)  StackingNet(MSE/single)")
+        for r in red['rows']:
+            print(f"  {r['cluster_size']:3d}     {r['n_independent_votes']:3d}        {r['best_single_rel']:.3f}     "
+                  f"{r['averaging_rel_mean']:.3f} +/- {r['averaging_rel_std']:.3f}     "
+                  f"{r['stackingnet_rel_mean']:.3f} +/- {r['stackingnet_rel_std']:.3f}")
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
-    json.dump({"synthetic": syn, "redundancy": red}, open(args.out, 'w'), indent=1)
+    json.dump({"synthetic": syn, "redundancy_by_M": by_M}, open(args.out, 'w'), indent=1)
     print(f"\nSaved -> {args.out}")
 
 

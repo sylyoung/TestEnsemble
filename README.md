@@ -27,7 +27,7 @@ python ensemble.py
 The classification results could also be generated from the LLMs on your own, using HuggingFace's transformers library. 
 
 ```sh 
-python generate_classification.py
+python generate_classification_LLM.py
 ```  
 
 ---
@@ -41,12 +41,17 @@ The core advantages of StackingNet:
 4. supports meta-combination, bias reduction, reliability ranking, and adversary pruning
 
 ```sh 
-python regression_stackingnet_xxx.py
+python regression_stackingnet_paperreview.py   # regression: research-paper rating
+python regression_stackingnet_cfd.py            # regression: CFD facial-attribute rating
 ```  
 
 ```sh 
-python classification_stackingnet.py
+python classification_stackingnet.py            # classification: HELM (also reliability ranking + adversary pruning)
 ```
+
+### Revision analysis (Advanced Science major revision)
+
+The `analysis/` directory holds the additional experiments answering the *Advanced Science* reviewer comments: a group-fairness battery (accuracy parity, demographic parity, bias amplification), inter-model dependence and controlled degradation under violated independence, dispersion–gain, human leave-one-out, and the Supporting Information figures. Each script is self-contained and runs on CPU from already-generated base-model predictions (no GPU, no re-querying of models). See [`analysis/RESULTS_SUMMARY.md`](analysis/RESULTS_SUMMARY.md) for the per-experiment findings and [`analysis/REPRODUCTION_REPORT.md`](analysis/REPRODUCTION_REPORT.md) for the from-scratch reproduction of the manuscript tables.
 
 ## Contact
 

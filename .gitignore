@@ -156,3 +156,6 @@ cython_debug/
 idea/
 .idea/
 .DS_Store
+
+# Large raw HELM benchmark data (312 MB) — kept local, not versioned
+data/helm_full/
