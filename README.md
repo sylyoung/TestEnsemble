@@ -49,9 +49,9 @@ python regression_stackingnet_cfd.py            # regression: CFD facial-attribu
 python classification_stackingnet.py            # classification: HELM (also reliability ranking + adversary pruning)
 ```
 
-### Revision analysis (Advanced Science major revision)
+### Additional analyses
 
-The `analysis/` directory holds the additional experiments answering the *Advanced Science* reviewer comments: a group-fairness battery (accuracy parity, demographic parity, bias amplification), inter-model dependence and controlled degradation under violated independence, dispersion–gain, human leave-one-out, and the Supporting Information figures. Each script is self-contained and runs on CPU from already-generated base-model predictions (no GPU, no re-querying of models). See [`analysis/RESULTS_SUMMARY.md`](analysis/RESULTS_SUMMARY.md) for the per-experiment findings and [`analysis/REPRODUCTION_REPORT.md`](analysis/REPRODUCTION_REPORT.md) for the from-scratch reproduction of the manuscript tables.
+The `analysis/` directory contains further experiments on StackingNet: a group-fairness battery (accuracy parity, demographic parity, bias amplification), inter-model dependence and controlled degradation under violated independence, dispersion–gain, and human leave-one-out. Each script is self-contained and runs on CPU from already-generated base-model predictions (no GPU, no re-querying of models). See [`analysis/RESULTS_SUMMARY.md`](analysis/RESULTS_SUMMARY.md) and [`analysis/REPRODUCTION_REPORT.md`](analysis/REPRODUCTION_REPORT.md) for details.
 
 ## Contact
 
@@ -73,6 +73,7 @@ If you find this repo helpful, please cite our work:
 
 @Article{Li2026StackingNet,
   author={Li, Siyang and Liu, Chenhao and Wu, Dongrui and Zeng, Zhigang and Ding, Lieyun},
+  journal={Advanced Science}, 
   title={StackingNet: Collective Inference across Independent AI Foundation Models}, 
   year={2026},
 }
