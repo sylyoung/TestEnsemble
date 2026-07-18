@@ -4,10 +4,10 @@ Aggregate the **output predictions** of independent, pre-trained, black-box mode
 without any access to their weights, gradients, or training data. This repository is the official
 implementation of two papers on post-hoc model combination:
 
-- **SML-OVR** — *Black-Box Test-Time Ensemble*, IEEE Computational Intelligence Magazine, 2026. [[Paper](https://ieeexplore.ieee.org/document/11353100/)]
 - **StackingNet** — *Collective Inference across Independent AI Foundation Models*, Advanced Science, 2026. [[BibTeX](#citation)]
+- **SML-OVR** — *Black-Box Test-Time Ensemble*, IEEE Computational Intelligence Magazine, 2026. [[Paper](https://ieeexplore.ieee.org/document/11353100/)]
 
-<p align="center"><img src="figures/smlovr.png" width="90%"></p>
+<p align="center"><img src="figures/stackingnet.png" width="100%"></p>
 
 ## Overview
 
@@ -16,9 +16,9 @@ internals are hidden, and they cannot share what they have learned. Both methods
 model as a black box and combine only the predictions it emits on the test set, estimating which
 models are reliable and weighting them accordingly. This needs no retraining and no model internals —
 only the assumption that the base models are reasonably diverse (conditionally independent given the
-label). SML-OVR targets multi-class classification with a fast, label-free spectral estimator;
-StackingNet is a lightweight trainable meta-learner that unifies regression and classification and
-adds reliability ranking and adversary pruning.
+label). **StackingNet** is a lightweight trainable meta-learner that unifies regression and
+classification and adds reliability ranking and adversary pruning; **SML-OVR** targets multi-class
+classification with a fast, label-free spectral estimator.
 
 ## Installation
 
@@ -35,17 +35,92 @@ Python 3.8+ with PyTorch. The combination methods run on CPU in seconds; a GPU i
 
 The combination methods run on the **base models' predictions** for each test set, which are the
 files this repo works from (all rights to the underlying datasets remain with their original
-sources; see [`data/README.md`](data/README.md)). For **SML-OVR**, the four text-classification
-datasets (`data/MOSI`, `data/TUSAS`, `data/TweetEval`, `data/WOS`) ship together with the predictions
-of all ten base LLMs under `results/<dataset>/`, so those experiments run out of the box. For
-**StackingNet**, predictions for the paper-rating and Chicago Face Database tasks live under `data/`,
-and the HELM classification outputs are read from `logs/helm/`. The large raw HELM benchmark dump
+sources; see [`data/README.md`](data/README.md)). For **StackingNet**, predictions for the
+paper-rating and Chicago Face Database tasks live under `data/`, and the HELM classification outputs
+are read from `logs/helm/`. For **SML-OVR**, the four text-classification datasets (`data/MOSI`,
+`data/TUSAS`, `data/TweetEval`, `data/WOS`) ship together with the predictions of all ten base LLMs
+under `results/<dataset>/`, so those experiments run out of the box. The large raw HELM benchmark dump
 (`data/helm_full/`, hundreds of MB) is kept local and is not required to reproduce the combination
 results.
 
 ---
 
+## StackingNet — Collective Inference across Independent AI Foundation Models
+
+**StackingNet** is a lightweight neural meta-learner that builds a combined prediction from the
+outputs of `M` independent base models, using a single set of per-model reliability weights (see the
+architecture figure at the top). One framework covers both task types:
+
+- **Regression:** `Ĥ(x) = wᵀh(x) + b` — per-model weights plus a scalar bias that recalibrates the
+  aggregate to the label range. Trained by mean-squared error on a small labeled set, with
+  non-negativity constraints; only `M+1` parameters.
+- **Classification:** `Ĥ(x) = h(x)·w` over one-hot base predictions, with `wⱼ` the reliability of
+  model `j`. Trained with cross-entropy when labels exist, and/or an **unsupervised** objective that
+  aligns each model to the aggregated consensus, plus a sum-to-one weight regularizer. Weights are
+  initialized from uniform voting or balanced-accuracy scores.
+
+Because the learned weight vector *is* a reliability estimate, the same model yields four utilities
+(panel d of the architecture figure above):
+
+- **Meta-combination** — a more accurate aggregate than any single model or simple averaging.
+- **Error & group-disparity reduction** — averages out model-specific bias; lowers worst-group error
+  on facial-attribute rating.
+- **Reliability ranking** — orders base models by learned weight, supervised (**S-StackingNet**) or
+  fully unsupervised (**U-StackingNet**).
+- **Adversary pruning** — flags and removes the lowest-weight (e.g. compromised) models.
+
+It is efficient to train, privacy-preserving, and effective with as little as 1% labeled data (or
+none, for the unsupervised variants).
+
+### Usage
+
+```sh
+python regression_stackingnet_paperreview.py   # regression: research-paper rating (ICLR/NeurIPS)
+python regression_stackingnet_cfd.py           # regression: Chicago Face Database attribute rating
+python classification_stackingnet.py           # classification: HELM (+ reliability ranking & adversary pruning)
+```
+
+`--golden_num` sets the percentage of labeled data used to train the meta-learner (few-shot by
+default).
+
+### Results
+
+<p align="center"><img src="figures/paperreview.png" width="85%"></p>
+
+*Research-paper rating (MAE, lower is better): combining LLMs beats every individual LLM, and
+few-shot StackingNet matches or exceeds an individual human reviewer across four venues.*
+
+<p align="center"><img src="figures/cfd.png" width="70%"></p>
+
+*Facial-attribute rating on the Chicago Face Database: StackingNet collapses the wide, directionally
+skewed per-model error distributions into a compact one centered near zero, reducing worst-group
+disparities.*
+
+<p align="center"><img src="figures/rankprune.png" width="100%"></p>
+
+*HELM classification: StackingNet's learned weights recover the ground-truth model ranking (a–c),
+detect compromised models (d–e), and keep ensemble accuracy stable while pruning weak models (f).*
+
+<p align="center"><img src="figures/stackingnet_table_classification.png" width="100%"></p>
+
+*Balanced classification accuracy (%) on eight HELM text-classification benchmarks, against every
+combination baseline. Supervised **S-StackingNet** and unsupervised **U-StackingNet** achieve the best
+average ranking.*
+
+### Additional analyses
+
+The [`analysis/`](analysis/) directory contains self-contained follow-up experiments — a
+group-fairness battery (accuracy parity, demographic parity, bias amplification), inter-model
+dependence and controlled degradation under violated independence, dispersion–gain, and human
+leave-one-out. Each script runs on CPU from already-generated predictions (no GPU, no re-querying).
+See [`analysis/RESULTS_SUMMARY.md`](analysis/RESULTS_SUMMARY.md) and
+[`analysis/REPRODUCTION_REPORT.md`](analysis/REPRODUCTION_REPORT.md).
+
+---
+
 ## SML-OVR — Black-Box Test-Time Ensemble
+
+<p align="center"><img src="figures/smlovr.png" width="62%"></p>
 
 Modern models are increasingly served as black boxes behind APIs — to protect training data, to cut
 storage and transmission cost, or to keep domain-specific models encapsulated. Combining or even
@@ -118,74 +193,15 @@ on the bottom axis), and each row is a pruning step that removes the lowest-weig
 label-free weights track the models' true accuracy, and combining only the top-ranked models beats
 the single best LLM on all four datasets.*
 
----
+<p align="center"><img src="figures/smlovr_table_text_timeseries.png" width="100%"></p>
 
-## StackingNet — Collective Inference across Independent AI Foundation Models
+*Balanced classification accuracy (accuracy in parentheses) on the text and time-series datasets
+(Table IV). Among all test-time combination methods, SML-OVR attains the best average rank.*
 
-<p align="center"><img src="figures/stackingnet.png" width="100%"></p>
+<p align="center"><img src="figures/smlovr_table_eeg_image.png" width="100%"></p>
 
-**StackingNet** is a lightweight neural meta-learner that builds a combined prediction from the
-outputs of `M` independent base models, using a single set of per-model reliability weights. One
-framework covers both task types:
-
-- **Regression:** `Ĥ(x) = wᵀh(x) + b` — per-model weights plus a scalar bias that recalibrates the
-  aggregate to the label range. Trained by mean-squared error on a small labeled set, with
-  non-negativity constraints; only `M+1` parameters.
-- **Classification:** `Ĥ(x) = h(x)·w` over one-hot base predictions, with `wⱼ` the reliability of
-  model `j`. Trained with cross-entropy when labels exist, and/or an **unsupervised** objective that
-  aligns each model to the aggregated consensus, plus a sum-to-one weight regularizer. Weights are
-  initialized from uniform voting or balanced-accuracy scores.
-
-Because the learned weight vector *is* a reliability estimate, the same model yields four utilities
-(Figure above, panel d):
-
-- **Meta-combination** — a more accurate aggregate than any single model or simple averaging.
-- **Error & group-disparity reduction** — averages out model-specific bias; lowers worst-group error
-  on facial-attribute rating.
-- **Reliability ranking** — orders base models by learned weight, supervised (**S-StackingNet**) or
-  fully unsupervised (**U-StackingNet**).
-- **Adversary pruning** — flags and removes the lowest-weight (e.g. compromised) models.
-
-It is efficient to train, privacy-preserving, and effective with as little as 1% labeled data (or
-none, for the unsupervised variants).
-
-### Usage
-
-```sh
-python regression_stackingnet_paperreview.py   # regression: research-paper rating (ICLR/NeurIPS)
-python regression_stackingnet_cfd.py           # regression: Chicago Face Database attribute rating
-python classification_stackingnet.py           # classification: HELM (+ reliability ranking & adversary pruning)
-```
-
-`--golden_num` sets the percentage of labeled data used to train the meta-learner (few-shot by
-default).
-
-### Results
-
-<p align="center"><img src="figures/paperreview.png" width="85%"></p>
-
-*Research-paper rating (MAE, lower is better): combining LLMs beats every individual LLM, and
-few-shot StackingNet matches or exceeds an individual human reviewer across four venues.*
-
-<p align="center"><img src="figures/cfd.png" width="70%"></p>
-
-*Facial-attribute rating on the Chicago Face Database: StackingNet collapses the wide, directionally
-skewed per-model error distributions into a compact one centered near zero, reducing worst-group
-disparities.*
-
-<p align="center"><img src="figures/rankprune.png" width="100%"></p>
-
-*HELM classification: StackingNet's learned weights recover the ground-truth model ranking (a–c),
-detect compromised models (d–e), and keep ensemble accuracy stable while pruning weak models (f).*
-
-### Additional analyses
-
-The [`analysis/`](analysis/) directory contains self-contained follow-up experiments — a
-group-fairness battery (accuracy parity, demographic parity, bias amplification), inter-model
-dependence and controlled degradation under violated independence, dispersion–gain, and human
-leave-one-out. Each script runs on CPU from already-generated predictions (no GPU, no re-querying).
-See [`analysis/RESULTS_SUMMARY.md`](analysis/RESULTS_SUMMARY.md) and
-[`analysis/REPRODUCTION_REPORT.md`](analysis/REPRODUCTION_REPORT.md).
+*The same comparison on the EEG and image datasets (Table V); SML-OVR again ranks first on average,
+while remaining far cheaper than the iterative EM-based methods.*
 
 ---
 
@@ -193,13 +209,14 @@ See [`analysis/RESULTS_SUMMARY.md`](analysis/RESULTS_SUMMARY.md) and
 
 Both papers compare against a common battery of prediction-combination methods from the crowdsourcing
 and ensemble literature. Each estimates per-model reliability and aggregates accordingly; all operate
-on predictions alone. Implementations live in [`algs/`](algs/), with several drawn from the
-[`crowd-kit`](https://github.com/Toloka/crowd-kit) library.
+on predictions alone. Implementations live in [`algs/`](algs/); **Dawid–Skene, WAwA, M-MSR, MACE, and
+GLAD** are computed with the [Crowd-Kit](https://github.com/Toloka/crowd-kit) aggregation library,
+and the remaining methods are implemented directly in this repository.
 
 | Method | Description | Reference |
 | --- | --- | --- |
 | **Voting** | Plurality vote; the class with the most votes wins, ties broken at random. | classical |
-| **WAwA** | Worker Agreement with Aggregate: reliability = agreement with the majority-vote consensus, then a weighted vote. | heuristic (crowd-kit) |
+| **WAwA** | Worker Agreement with Aggregate: reliability = agreement with the majority-vote consensus, then a weighted vote. | heuristic (Crowd-Kit) |
 | **Dawid–Skene** | EM over a per-model confusion matrix, jointly inferring true labels and error rates. | J. R. Stat. Soc. C, 1979 |
 | **GLAD** | Generative model of Labels, Abilities and Difficulties; EM over model ability and item difficulty. | NeurIPS 2009 |
 | **MACE** | Multi-Annotator Competence Estimation; EM that models unreliable "spamming" annotators. | NAACL-HLT 2013 |
@@ -235,6 +252,13 @@ figures/                               # figures used in this README
 If you find this repository helpful, please cite our work:
 
 ```bibtex
+@Article{Li2026StackingNet,
+  author={Li, Siyang and Liu, Chenhao and Wu, Dongrui and Zeng, Zhigang and Ding, Lieyun},
+  journal={Advanced Science},
+  title={StackingNet: Collective Inference across Independent AI Foundation Models},
+  year={2026}
+}
+
 @Article{Li2026SMLOVR,
   author={Li, Siyang and Wang, Ziwei and Liu, Chenhao and Wu, Dongrui},
   journal={IEEE Computational Intelligence Magazine},
@@ -244,14 +268,13 @@ If you find this repository helpful, please cite our work:
   number={1},
   pages={57-68}
 }
-
-@Article{Li2026StackingNet,
-  author={Li, Siyang and Liu, Chenhao and Wu, Dongrui and Zeng, Zhigang and Ding, Lieyun},
-  journal={Advanced Science},
-  title={StackingNet: Collective Inference across Independent AI Foundation Models},
-  year={2026}
-}
 ```
+
+## Acknowledgements
+
+The Dawid–Skene, WAwA, M-MSR, MACE, and GLAD baselines are provided by
+[Crowd-Kit](https://github.com/Toloka/crowd-kit), an open-source crowdsourcing-aggregation library by
+Toloka; we thank its authors.
 
 ## Contact
 
