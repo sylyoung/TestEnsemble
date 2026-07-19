@@ -15,8 +15,8 @@ Aggregate the output predictions of independent, pre-trained, black-box models a
 ![Python](https://img.shields.io/badge/python-3.8%2B-3776ab)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.2-ee4c2c)
 ![Papers](https://img.shields.io/badge/papers-2-4338ca)
-![Advanced Science](https://img.shields.io/badge/Advanced%20Science-2026-059669)
-![IEEE CIM](https://img.shields.io/badge/IEEE%20CIM-2026-00629b)
+[![Advanced Science](https://img.shields.io/badge/Advanced%20Science-2026-059669)](https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.76488)
+[![IEEE CIM](https://img.shields.io/badge/IEEE%20CIM-2026-00629b)](https://ieeexplore.ieee.org/document/11353100/)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 [**StackingNet**](#stackingnet) &nbsp;·&nbsp; [**SML-OVR**](#sml-ovr) &nbsp;·&nbsp; [**HUST-BCIML hub**](https://github.com/sylyoung/HUST-BCIML) &nbsp;·&nbsp; [**Lab website**](https://lab.bciml.cn/)
@@ -34,8 +34,8 @@ deployed over time.*
 
 > **Two papers, one idea — combine black-box model predictions at test time.**
 >
-> - **StackingNet** &nbsp;·&nbsp; *Collective Inference across Independent AI Foundation Models* &nbsp;·&nbsp; Advanced Science 2026 &nbsp;·&nbsp; [BibTeX](#citation)
-> - **SML-OVR** &nbsp;·&nbsp; *Black-Box Test-Time Ensemble* &nbsp;·&nbsp; IEEE Computational Intelligence Magazine 2026 &nbsp;·&nbsp; [Paper](https://ieeexplore.ieee.org/document/11353100/)
+> - **StackingNet** &nbsp;·&nbsp; *Collective Inference across Independent AI Foundation Models* &nbsp;·&nbsp; Advanced Science 2026 &nbsp;·&nbsp; [Paper](https://advanced.onlinelibrary.wiley.com/doi/10.1002/advs.76488) &nbsp;·&nbsp; [BibTeX](#citation)
+> - **SML-OVR** &nbsp;·&nbsp; *Black-Box Test-Time Ensemble* &nbsp;·&nbsp; IEEE Computational Intelligence Magazine 2026 &nbsp;·&nbsp; [Paper](https://ieeexplore.ieee.org/document/11353100/) &nbsp;·&nbsp; [BibTeX](#citation)
 
 ## Contents
 
@@ -319,7 +319,8 @@ If you find this repository helpful, please cite our work:
   author={Li, Siyang and Liu, Chenhao and Wu, Dongrui and Zeng, Zhigang and Ding, Lieyun},
   journal={Advanced Science},
   title={StackingNet: Collective Inference across Independent AI Foundation Models},
-  year={2026}
+  year={2026},
+  doi={10.1002/advs.76488}
 }
 
 @Article{Li2026SMLOVR,
