@@ -25,7 +25,12 @@ Aggregate the output predictions of independent, pre-trained, black-box models a
 
 ---
 
-<p align="center"><img src="figures/stackingnet.png" width="100%"></p>
+<p align="center"><img src="figures/blackbox_scenarios.png" width="100%"></p>
+
+*Three real-world settings where models are served as black boxes and only their test-set predictions
+are available to combine (Fig. 1 of the SML-OVR paper): (a) large models exposed only through APIs;
+(b) privacy-restricted data and encapsulated models; and (c) domain-specific models collected and
+deployed over time.*
 
 > **Two papers, one idea — combine black-box model predictions at test time.**
 >
@@ -92,9 +97,16 @@ results.
 
 **Collective Inference across Independent AI Foundation Models** &nbsp;·&nbsp; Advanced Science 2026
 
+<p align="center"><img src="figures/stackingnet.png" width="100%"></p>
+
+*StackingNet overview: (A) collective intelligence across natural and artificial systems; (B) collective
+inference by querying multiple foundation models; (C) the regression and classification meta-learner
+architecture; and (D) its four utilities — meta-combination, bias reduction, reliability ranking, and
+adversary pruning.*
+
 **StackingNet** is a lightweight neural meta-learner that builds a combined prediction from the
-outputs of `M` independent base models, using a single set of per-model reliability weights (see the
-architecture figure at the top). One framework covers both task types:
+outputs of `M` independent base models, using a single set of per-model reliability weights (panel C
+of the figure above). One framework covers both task types:
 
 - **Regression:** `Ĥ(x) = wᵀh(x) + b` — per-model weights plus a scalar bias that recalibrates the
   aggregate to the label range. Trained by mean-squared error on a small labeled set, with
@@ -105,7 +117,7 @@ architecture figure at the top). One framework covers both task types:
   initialized from uniform voting or balanced-accuracy scores.
 
 Because the learned weight vector *is* a reliability estimate, the same model yields four utilities
-(panel d of the architecture figure above):
+(panel D of the figure above):
 
 - **Meta-combination** — a more accurate aggregate than any single model or simple averaging.
 - **Error & group-disparity reduction** — averages out model-specific bias; lowers worst-group error
