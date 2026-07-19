@@ -1,13 +1,52 @@
-# TestEnsemble: Test-Time Combination of Black-Box Model Predictions
+<div align="center">
 
-Aggregate the **output predictions** of independent, pre-trained, black-box models at inference —
-without any access to their weights, gradients, or training data. This repository is the official
-implementation of two papers on post-hoc model combination:
+# TestEnsemble
 
-- **StackingNet** — *Collective Inference across Independent AI Foundation Models*, Advanced Science, 2026. [[BibTeX](#citation)]
-- **SML-OVR** — *Black-Box Test-Time Ensemble*, IEEE Computational Intelligence Magazine, 2026. [[Paper](https://ieeexplore.ieee.org/document/11353100/)]
+**Test-Time Combination of Black-Box Model Predictions**
+
+Brain-Computer Interface and Machine Learning Laboratory &nbsp;·&nbsp; Huazhong University of Science and Technology
+
+<br>
+
+Aggregate the output predictions of independent, pre-trained, black-box models at inference — no access to their weights, gradients, or training data.
+
+<br>
+
+![Python](https://img.shields.io/badge/python-3.8%2B-3776ab)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.2-ee4c2c)
+![Papers](https://img.shields.io/badge/papers-2-4338ca)
+![Advanced Science](https://img.shields.io/badge/Advanced%20Science-2026-059669)
+![IEEE CIM](https://img.shields.io/badge/IEEE%20CIM-2026-00629b)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
+[**StackingNet**](#stackingnet) &nbsp;·&nbsp; [**SML-OVR**](#sml-ovr) &nbsp;·&nbsp; [**HUST-BCIML hub**](https://github.com/sylyoung/HUST-BCIML) &nbsp;·&nbsp; [**Lab website**](https://lab.bciml.cn/)
+
+</div>
+
+---
 
 <p align="center"><img src="figures/stackingnet.png" width="100%"></p>
+
+> **Two papers, one idea — combine black-box model predictions at test time.**
+>
+> - **StackingNet** &nbsp;·&nbsp; *Collective Inference across Independent AI Foundation Models* &nbsp;·&nbsp; Advanced Science 2026 &nbsp;·&nbsp; [BibTeX](#citation)
+> - **SML-OVR** &nbsp;·&nbsp; *Black-Box Test-Time Ensemble* &nbsp;·&nbsp; IEEE Computational Intelligence Magazine 2026 &nbsp;·&nbsp; [Paper](https://ieeexplore.ieee.org/document/11353100/)
+
+## Contents
+
+- [Overview](#overview)
+- [Installation](#installation)
+- [Data](#data)
+- [StackingNet](#stackingnet)
+- [SML-OVR](#sml-ovr)
+- [Baseline combination methods](#baseline-combination-methods)
+- [Repository structure](#repository-structure)
+- [Citation](#citation)
+- [Acknowledgements](#acknowledgements)
+- [Contact](#contact)
+- [License](#license)
+
+<br>
 
 ## Overview
 
@@ -20,6 +59,8 @@ label). **StackingNet** is a lightweight trainable meta-learner that unifies reg
 classification and adds reliability ranking and adversary pruning; **SML-OVR** targets multi-class
 classification with a fast, label-free spectral estimator.
 
+<br>
+
 ## Installation
 
 ```sh
@@ -30,6 +71,8 @@ pip install -r requirements.txt
 
 Python 3.8+ with PyTorch. The combination methods run on CPU in seconds; a GPU is only needed to
 (re)generate base-model predictions from the LLMs/VLMs.
+
+<br>
 
 ## Data
 
@@ -45,7 +88,9 @@ results.
 
 ---
 
-## StackingNet — Collective Inference across Independent AI Foundation Models
+## StackingNet
+
+**Collective Inference across Independent AI Foundation Models** &nbsp;·&nbsp; Advanced Science 2026
 
 **StackingNet** is a lightweight neural meta-learner that builds a combined prediction from the
 outputs of `M` independent base models, using a single set of per-model reliability weights (see the
@@ -118,7 +163,9 @@ See [`analysis/RESULTS_SUMMARY.md`](analysis/RESULTS_SUMMARY.md) and
 
 ---
 
-## SML-OVR — Black-Box Test-Time Ensemble
+## SML-OVR
+
+**Black-Box Test-Time Ensemble** &nbsp;·&nbsp; IEEE Computational Intelligence Magazine 2026
 
 <p align="center"><img src="figures/smlovr.png" width="62%"></p>
 
@@ -232,6 +279,8 @@ and the remaining methods are implemented directly in this repository.
 For regression, StackingNet is compared against uniform **averaging** and a classic linear
 **StackingRegressor** (supervised stacked generalization; Wolpert, *Neural Networks*, 1992).
 
+<br>
+
 ## Repository structure
 
 ```
@@ -246,6 +295,8 @@ analysis/                              # follow-up analyses (fairness, dependenc
 data/  logs/  results/                 # base-model predictions, HELM outputs, and saved results
 figures/                               # figures used in this README
 ```
+
+<br>
 
 ## Citation
 
@@ -270,17 +321,31 @@ If you find this repository helpful, please cite our work:
 }
 ```
 
+<br>
+
 ## Acknowledgements
 
 The Dawid–Skene, WAwA, M-MSR, MACE, and GLAD baselines are provided by
 [Crowd-Kit](https://github.com/Toloka/crowd-kit), an open-source crowdsourcing-aggregation library by
 Toloka; we thank its authors.
 
+<br>
+
 ## Contact
 
 For questions about the paper/research, contact syoungli@hust.edu.cn or lsyyoungll@gmail.com. For
 questions about the code, please open an Issue.
 
+<br>
+
 ## License
 
 Released under the [MIT License](LICENSE).
+
+---
+
+<div align="center"><sub>
+
+Part of the <a href="https://github.com/sylyoung/HUST-BCIML">HUST-BCIML</a> open-source code home &nbsp;·&nbsp; Brain-Computer Interface and Machine Learning Laboratory, HUST
+
+</sub></div>
